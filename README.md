@@ -24,12 +24,15 @@ Auth-Hub provides everything you need to add authentication to your applications
 ```
 auth-hub/
 ├── packages/
-│   ├── types/        # Shared TypeScript type definitions
-│   ├── core/         # Core auth logic (framework-agnostic)
-│   ├── react/        # React components & hooks
-│   └── node-sdk/     # Node.js SDK client
+│   ├── types/         # Shared TypeScript type definitions   (@reasvyn/auth-types)
+│   ├── core/          # Core auth logic — framework-agnostic (@reasvyn/auth-core)
+│   ├── react/         # React components & hooks             (@reasvyn/auth-react)
+│   ├── node-sdk/      # HTTP client SDK                      (@reasvyn/auth-node-sdk)
+│   └── adapters/
+│       ├── express/   # Express.js middleware & router       (@reasvyn/auth-express)
+│       └── nextjs/    # Next.js App Router + Edge support    (@reasvyn/auth-nextjs)
 ├── apps/
-│   └── docs/         # Documentation site
+│   └── docs/          # Documentation site
 ├── turbo.json
 ├── tsconfig.json
 └── package.json
@@ -40,9 +43,11 @@ auth-hub/
 | Package | Description | Version |
 |---------|-------------|---------|
 | [`@reasvyn/auth-types`](./packages/types) | Shared TypeScript type definitions | 0.0.1 |
-| [`@reasvyn/auth-core`](./packages/core) | Core authentication logic | 0.0.1 |
-| [`@reasvyn/auth-react`](./packages/react) | React components & hooks | 0.0.1 |
-| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | Node.js SDK client | 0.0.1 |
+| [`@reasvyn/auth-core`](./packages/core) | Core authentication logic (framework-agnostic) | 0.0.1 |
+| [`@reasvyn/auth-react`](./packages/react) | React components & hooks (Tailwind, dark mode) | 0.0.1 |
+| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | HTTP client SDK | 0.0.1 |
+| [`@reasvyn/auth-express`](./packages/adapters/express) | Express.js middleware & route handlers | 0.0.1 |
+| [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs) | Next.js App Router, Edge Middleware & server helpers | 0.0.1 |
 
 ## Installation
 

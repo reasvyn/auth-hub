@@ -1,0 +1,42 @@
+{
+  "name": "@reasvyn/auth-express",
+  "version": "0.0.1",
+  "description": "Express.js middleware and route handlers for Auth-Hub",
+  "keywords": ["auth", "authentication", "express", "middleware", "typescript"],
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "express": ">=4.0.0"
+  },
+  "dependencies": {
+    "@reasvyn/auth-core": "*",
+    "@reasvyn/auth-types": "*"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "*",
+    "express": "^4.19.2"
+  }
+}

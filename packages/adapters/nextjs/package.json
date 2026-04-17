@@ -1,0 +1,53 @@
+{
+  "name": "@reasvyn/auth-nextjs",
+  "version": "0.0.1",
+  "description": "Next.js adapter for Auth-Hub — App Router, Pages, and Edge Middleware",
+  "keywords": ["auth", "authentication", "nextjs", "next", "middleware", "typescript"],
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.mjs",
+      "require": "./dist/middleware.js",
+      "types": "./dist/middleware.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@reasvyn/auth-core": "*",
+    "@reasvyn/auth-react": "*",
+    "@reasvyn/auth-types": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/node": "^20.0.0",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "*"
+  }
+}

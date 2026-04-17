@@ -5,6 +5,7 @@
   "description": "A comprehensive TypeScript authentication library monorepo",
   "workspaces": [
     "packages/*",
+    "packages/adapters/*",
     "apps/*"
   ],
   "scripts": {
