@@ -10,14 +10,16 @@ A comprehensive TypeScript authentication library monorepo — modular, reusable
 
 Auth-Hub provides everything you need to add authentication to your applications:
 
-- 🔐 **Email/Password authentication** with secure hashing
-- 🌐 **OAuth2 support** for Google, GitHub, and more
-- 🔗 **Magic link** authentication
-- 🛡️ **Security features**: rate limiting, CSRF protection, brute-force prevention, 2FA/TOTP
-- ⚛️ **React components & hooks** — drop-in LoginForm, RegisterForm, MFA flows
-- 📦 **Node.js SDK** for server-side integration
-- 🎨 **TailwindCSS & shadcn/ui** compatible styling
-- 🔧 **Fully TypeScript** — strict types throughout
+- 🔐 **Email/Password authentication** with secure hashing (bcrypt)
+- 🌐 **OAuth2 support** for Google, GitHub, Discord, Facebook, Apple, Twitter
+- 🔗 **Magic link** passwordless authentication
+- 🛡️ **MFA/TOTP** — setup, verify, disable, backup codes
+- ⚛️ **React components & hooks** — drop-in LoginForm, RegisterForm, MFA flows, dark mode
+- 📦 **Node.js HTTP SDK** for server-side integration
+- 🚂 **Express adapter** — middleware + plug-and-play route handlers
+- ▲ **Next.js adapter** — Edge middleware, Server Component helpers, client adapter
+- 🎨 **TailwindCSS** with full light/dark mode support
+- 🔧 **Fully TypeScript** — strict types throughout, zero `any` in public API
 
 ## Architecture
 
@@ -74,67 +76,219 @@ npm install @reasvyn/auth-node-sdk
 
 ## Quick Start
 
-### React Application
+### Next.js App Router (Recommended)
+
+The fastest way to add auth to a Next.js 13+ project.
+
+**1. Install packages**
+
+```bash
+npm install @reasvyn/auth-nextjs @reasvyn/auth-react
+# tailwindcss must already be set up in your project
+```
+
+**2. Add Edge Middleware** (`middleware.ts` at project root)
+
+```ts
+import { createAuthMiddleware } from '@reasvyn/auth-nextjs/middleware';
+
+export const middleware = createAuthMiddleware({
+  secret: process.env.JWT_SECRET!,
+  loginPath: '/login',
+});
+
+// Protect dashboard and all API routes under /api/protected
+export const config = {
+  matcher: ['/dashboard/:path*', '/api/protected/:path*'],
+};
+```
+
+**3. Wrap your layout with `AuthProvider`** (`app/layout.tsx`)
+
+```tsx
+'use client';
+import { AuthProvider } from '@reasvyn/auth-react';
+import { createNextJsAdapter } from '@reasvyn/auth-nextjs/client';
+
+const adapter = createNextJsAdapter({ basePath: '/api/auth' });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <AuthProvider adapter={adapter}>{children}</AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+**4. Drop in a LoginForm** (`app/login/page.tsx`)
+
+```tsx
+'use client';
+import { LoginForm } from '@reasvyn/auth-react';
+import { useRouter } from 'next/navigation';
+
+export default function LoginPage() {
+  const router = useRouter();
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <LoginForm
+        providers={['google', 'github']}
+        enableMagicLink
+        onSuccess={() => router.push('/dashboard')}
+      />
+    </div>
+  );
+}
+```
+
+**5. Read session in Server Components**
+
+```tsx
+import { headers } from 'next/headers';
+import { getServerSession } from '@reasvyn/auth-nextjs';
+
+export default async function DashboardPage() {
+  const session = await getServerSession(await headers());
+  if (!session) return null;
+  return <h1>Hello, {session.email}</h1>;
+}
+```
+
+---
+
+### React + Express (Custom Backend)
+
+**1. Install packages**
+
+```bash
+# Frontend
+npm install @reasvyn/auth-react
+
+# Backend
+npm install @reasvyn/auth-express @reasvyn/auth-core
+```
+
+**2. Mount the auth router** (Express server)
+
+```ts
+import express from 'express';
+import { createAuthRouter } from '@reasvyn/auth-express';
+
+const app = express();
+app.use(express.json());
+
+app.use('/auth', createAuthRouter({
+  jwtAccessSecret: process.env.JWT_ACCESS_SECRET!,
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET!,
+  hmacSecret: process.env.HMAC_SECRET!,
+  appBaseUrl: 'https://myapp.com',
+  services: {
+    findUserByEmail: (email) => db.users.findUnique({ where: { email } }),
+    createUser: (data) => db.users.create({ data }),
+    updateUser: (id, data) => db.users.update({ where: { id }, data }),
+    storeRefreshToken: (userId, token, expiresAt) =>
+      db.refreshTokens.create({ data: { userId, token, expiresAt } }),
+    validateRefreshToken: async (token) => {
+      const rt = await db.refreshTokens.findUnique({ where: { token } });
+      if (!rt || rt.expiresAt < new Date()) return null;
+      return rt.userId;
+    },
+    revokeRefreshToken: (token) =>
+      db.refreshTokens.delete({ where: { token } }),
+  },
+}));
+```
+
+**3. Protect routes with middleware**
+
+```ts
+import { requireAuth, requireRole } from '@reasvyn/auth-express';
+
+const auth = requireAuth({ secret: process.env.JWT_ACCESS_SECRET! });
+
+app.get('/api/me', auth, (req, res) => {
+  res.json({ userId: req.auth!.sub });
+});
+
+app.delete('/api/users/:id', auth, requireRole('admin'), (req, res) => {
+  // Only admins reach here
+});
+```
+
+**4. Connect React frontend with an adapter**
 
 ```tsx
 import { AuthProvider, LoginForm } from '@reasvyn/auth-react';
 import { AuthHubClient } from '@reasvyn/auth-node-sdk';
 
-const client = new AuthHubClient({
-  baseUrl: 'https://your-auth-server.com',
-  clientId: 'your-client-id',
-});
+// Create SDK client that points to your Express server
+const client = new AuthHubClient({ baseUrl: 'https://myapp.com' });
+
+// Build an adapter from the SDK client
+const adapter = {
+  login: (creds) => client.auth.login(creds),
+  register: (creds) => client.auth.register(creds),
+  logout: (rt) => client.auth.logout(rt),
+  refreshToken: (rt) => client.auth.refreshToken(rt),
+  getUser: () => client.users.me(),
+  sendMagicLink: (email) => client.auth.sendMagicLink(email),
+  requestPasswordReset: (email) => client.auth.requestPasswordReset(email),
+  confirmPasswordReset: (token, pw) => client.auth.confirmPasswordReset(token, pw),
+  changePassword: (cur, next) => client.auth.changePassword(cur, next),
+};
 
 function App() {
   return (
-    <AuthProvider client={client}>
-      <LoginForm
-        onSuccess={(session) => console.log('Logged in!', session)}
-        onError={(error) => console.error('Auth error:', error)}
-        providers={['google', 'github']}
-      />
+    <AuthProvider adapter={adapter}>
+      <LoginForm providers={['google', 'github']} enableMagicLink />
     </AuthProvider>
   );
 }
 ```
 
-### Node.js SDK
+---
+
+### Node.js SDK (Standalone)
 
 ```typescript
 import { AuthHubClient } from '@reasvyn/auth-node-sdk';
 
-const client = new AuthHubClient({
-  baseUrl: 'https://your-auth-server.com',
-  clientId: 'your-client-id',
-  clientSecret: 'your-client-secret',
-});
+const client = new AuthHubClient({ baseUrl: 'https://auth.myapp.com' });
 
-// Login
-const session = await client.auth.login({
-  email: 'user@example.com',
-  password: 'secure-password',
-});
+// Login and set token for subsequent requests
+const session = await client.auth.login({ email: 'user@example.com', password: 'secret' });
+client.setAccessToken(session.accessToken!);
 
-// Get current user
-const user = await client.users.me();
+// Fetch current user
+const me = await client.users.me();
+
+// List active sessions
+const sessions = await client.sessions.list();
+
+// Set up MFA
+const mfaData = await client.mfa.setup('totp');
+console.log(mfaData.qrCodeUrl); // Show QR to user
 ```
 
-### Core Package (Server-side)
+---
+
+### Core Package (Low-level / Server-side)
 
 ```typescript
-import { hashPassword, verifyPassword, createJWT, verifyJWT } from '@reasvyn/auth-core';
+import { hashPassword, verifyPassword, createJWT, verifyJWT, createTokenPair } from '@reasvyn/auth-core';
 
-// Hash a password
-const hash = await hashPassword('user-password');
+const hash = await hashPassword('mypassword');
+const valid = await verifyPassword('mypassword', hash); // true
 
-// Verify password
-const isValid = await verifyPassword('user-password', hash);
-
-// Create JWT
-const token = createJWT({ userId: '123' }, 'your-secret', { expiresIn: '7d' });
-
-// Verify JWT
-const payload = verifyJWT(token, 'your-secret');
+// Short-lived access token + long-lived refresh token
+const { accessToken, refreshToken } = createTokenPair(
+  { sub: user.id, email: user.email, role: user.role },
+  process.env.JWT_ACCESS_SECRET!,
+  process.env.JWT_REFRESH_SECRET!,
+);
 ```
 
 ## Development
@@ -172,8 +326,9 @@ We welcome contributions! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 - [ ] Audit log & anomaly detection
 - [ ] Multi-tenant support
 - [ ] Admin SDK
-- [ ] Next.js adapter
-- [ ] Express.js middleware
+- [ ] Rate limiting utilities
+- [ ] CSRF protection helpers
+- [ ] Svelte / Vue adapters
 
 ## License
 
