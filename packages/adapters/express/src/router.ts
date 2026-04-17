@@ -98,6 +98,12 @@ function runRoute(
 
 const ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60;
 
+function sanitizeUserForResponse(user: User): User {
+  const safeUser = { ...(user as User & { passwordHash?: string }) };
+  delete safeUser.passwordHash;
+  return safeUser;
+}
+
 export function createAuthRouter(config: AuthRouterConfig) {
   const router: Router = Router();
 
@@ -140,7 +146,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
       }
 
       sendSuccess(res, {
-        user,
+        user: sanitizeUserForResponse(user),
         accessToken,
         refreshToken,
         expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
@@ -180,7 +186,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
       await services.storeRefreshToken(user.id, refreshToken, refreshExpiresAt);
 
       sendSuccess(res, {
-        user,
+        user: sanitizeUserForResponse(user),
         accessToken,
         refreshToken,
         expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
@@ -227,7 +233,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
       await services.storeRefreshToken(user.id, newRefreshToken, refreshExpiresAt);
 
       sendSuccess(res, {
-        user,
+        user: sanitizeUserForResponse(user),
         accessToken,
         refreshToken: newRefreshToken,
         expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
@@ -322,7 +328,12 @@ export function createAuthRouter(config: AuthRouterConfig) {
       const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       await services.storeRefreshToken(user.id, refreshToken, refreshExpiresAt);
 
-      sendSuccess(res, { user, accessToken, refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS });
+      sendSuccess(res, {
+        user: sanitizeUserForResponse(user),
+        accessToken,
+        refreshToken,
+        expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
+      });
     } catch (err) {
       sendError(res, err, 401);
     }
