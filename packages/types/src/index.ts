@@ -1,5 +1,5 @@
 /**
- * @auth-hub/types - Shared TypeScript type definitions
+ * @reasvyn/auth-types - Shared TypeScript type definitions
  *
  * Re-exports all type definitions from sub-modules.
  */

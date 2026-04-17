@@ -4,7 +4,7 @@
 
 import { createHmac, randomBytes } from 'crypto';
 
-import type { CSRFToken } from '@auth-hub/types';
+import type { CSRFToken } from '@reasvyn/auth-types';
 
 /**
  * Generate a CSRF token signed with a secret

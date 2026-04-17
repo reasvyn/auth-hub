@@ -4,7 +4,7 @@
 
 import { randomBytes, createHash } from 'crypto';
 
-import type { OAuthAuthorizationUrl, OAuthProvider, OAuthState } from '@auth-hub/types';
+import type { OAuthAuthorizationUrl, OAuthProvider, OAuthState } from '@reasvyn/auth-types';
 
 export interface OAuthFlowOptions {
   clientId: string;

@@ -2,9 +2,9 @@
  * Error handling utilities
  */
 
-import { ErrorCode } from '@auth-hub/types';
+import { ErrorCode } from '@reasvyn/auth-types';
 
-import type { AuthError } from '@auth-hub/types';
+import type { AuthError } from '@reasvyn/auth-types';
 
 export class AuthHubError extends Error {
   public readonly code: ErrorCode;

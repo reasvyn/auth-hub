@@ -1,11 +1,11 @@
-# @auth-hub/core
+# @reasvyn/auth-core
 
 Core authentication logic for Auth-Hub — framework-agnostic. Provides the building blocks for authentication: password hashing, JWT management, TOTP 2FA, rate limiting, CSRF protection, and more.
 
 ## Installation
 
 ```bash
-npm install @auth-hub/core
+npm install @reasvyn/auth-core
 ```
 
 ## Features
@@ -27,7 +27,7 @@ npm install @auth-hub/core
 ### Password Utilities
 
 ```typescript
-import { hashPassword, verifyPassword, validatePasswordStrength } from '@auth-hub/core';
+import { hashPassword, verifyPassword, validatePasswordStrength } from '@reasvyn/auth-core';
 
 // Hash a password
 const hash = await hashPassword('myPassword123!');
@@ -42,7 +42,7 @@ const { isValid, errors, strength } = validatePasswordStrength('weak');
 ### JWT Tokens
 
 ```typescript
-import { createJWT, verifyJWT, createTokenPair } from '@auth-hub/core';
+import { createJWT, verifyJWT, createTokenPair } from '@reasvyn/auth-core';
 
 // Create access token
 const token = createJWT(
@@ -65,7 +65,7 @@ const { accessToken, refreshToken } = createTokenPair(
 ### Magic Links
 
 ```typescript
-import { generateMagicLinkToken, verifyMagicLinkToken } from '@auth-hub/core';
+import { generateMagicLinkToken, verifyMagicLinkToken } from '@reasvyn/auth-core';
 
 const { token, url } = generateMagicLinkToken('user@example.com', {
   secret: process.env.MAGIC_LINK_SECRET!,
@@ -83,7 +83,7 @@ if (result.valid) {
 ### TOTP / 2FA
 
 ```typescript
-import { generateTOTPSecret, verifyTOTPCode } from '@auth-hub/core';
+import { generateTOTPSecret, verifyTOTPCode } from '@reasvyn/auth-core';
 
 // Setup
 const setup = await generateTOTPSecret({
@@ -99,7 +99,7 @@ const isValid = verifyTOTPCode('123456', setup.secret);
 ### Rate Limiting
 
 ```typescript
-import { RateLimiter } from '@auth-hub/core';
+import { RateLimiter } from '@reasvyn/auth-core';
 
 const limiter = new RateLimiter({ maxRequests: 5, windowMs: 15 * 60 * 1000 });
 
@@ -112,7 +112,7 @@ if (!allowed) {
 ### Error Handling
 
 ```typescript
-import { Errors, isAuthHubError } from '@auth-hub/core';
+import { Errors, isAuthHubError } from '@reasvyn/auth-core';
 
 try {
   // ...

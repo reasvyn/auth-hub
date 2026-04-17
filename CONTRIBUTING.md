@@ -117,7 +117,7 @@ docs(types): add JSDoc comments to AuthError
 2. Initialize with proper `package.json`:
    ```json
    {
-     "name": "@auth-hub/my-package",
+     "name": "@reasvyn/auth-my-package",
      "version": "0.0.1",
      "main": "./dist/index.js",
      "types": "./dist/index.d.ts"

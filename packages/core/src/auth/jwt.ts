@@ -4,7 +4,7 @@
 
 import jwt from 'jsonwebtoken';
 
-import type { JWTPayload, TokenPair } from '@auth-hub/types';
+import type { JWTPayload, TokenPair } from '@reasvyn/auth-types';
 
 export interface JWTOptions {
   expiresIn?: string | number;

@@ -39,10 +39,10 @@ auth-hub/
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@auth-hub/types`](./packages/types) | Shared TypeScript type definitions | 0.0.1 |
-| [`@auth-hub/core`](./packages/core) | Core authentication logic | 0.0.1 |
-| [`@auth-hub/react`](./packages/react) | React components & hooks | 0.0.1 |
-| [`@auth-hub/node-sdk`](./packages/node-sdk) | Node.js SDK client | 0.0.1 |
+| [`@reasvyn/auth-types`](./packages/types) | Shared TypeScript type definitions | 0.0.1 |
+| [`@reasvyn/auth-core`](./packages/core) | Core authentication logic | 0.0.1 |
+| [`@reasvyn/auth-react`](./packages/react) | React components & hooks | 0.0.1 |
+| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | Node.js SDK client | 0.0.1 |
 
 ## Installation
 
@@ -55,16 +55,16 @@ auth-hub/
 
 ```bash
 # Types package
-npm install @auth-hub/types
+npm install @reasvyn/auth-types
 
 # Core auth logic (Node.js/server-side)
-npm install @auth-hub/core
+npm install @reasvyn/auth-core
 
 # React components and hooks
-npm install @auth-hub/react
+npm install @reasvyn/auth-react
 
 # Node.js SDK
-npm install @auth-hub/node-sdk
+npm install @reasvyn/auth-node-sdk
 ```
 
 ## Quick Start
@@ -72,8 +72,8 @@ npm install @auth-hub/node-sdk
 ### React Application
 
 ```tsx
-import { AuthProvider, LoginForm } from '@auth-hub/react';
-import { AuthHubClient } from '@auth-hub/node-sdk';
+import { AuthProvider, LoginForm } from '@reasvyn/auth-react';
+import { AuthHubClient } from '@reasvyn/auth-node-sdk';
 
 const client = new AuthHubClient({
   baseUrl: 'https://your-auth-server.com',
@@ -96,7 +96,7 @@ function App() {
 ### Node.js SDK
 
 ```typescript
-import { AuthHubClient } from '@auth-hub/node-sdk';
+import { AuthHubClient } from '@reasvyn/auth-node-sdk';
 
 const client = new AuthHubClient({
   baseUrl: 'https://your-auth-server.com',
@@ -117,7 +117,7 @@ const user = await client.users.me();
 ### Core Package (Server-side)
 
 ```typescript
-import { hashPassword, verifyPassword, createJWT, verifyJWT } from '@auth-hub/core';
+import { hashPassword, verifyPassword, createJWT, verifyJWT } from '@reasvyn/auth-core';
 
 // Hash a password
 const hash = await hashPassword('user-password');

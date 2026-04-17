@@ -1,5 +1,5 @@
 {
-  "name": "@auth-hub/core",
+  "name": "@reasvyn/auth-core",
   "version": "0.0.1",
   "description": "Core authentication logic for Auth-Hub — framework-agnostic",
   "keywords": ["auth", "authentication", "jwt", "bcrypt", "typescript"],
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@auth-hub/types": "*",
+    "@reasvyn/auth-types": "*",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "speakeasy": "^2.0.0",

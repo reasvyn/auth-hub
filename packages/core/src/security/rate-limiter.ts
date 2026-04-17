@@ -2,7 +2,7 @@
  * In-memory rate limiter implementation
  */
 
-import type { RateLimitInfo } from '@auth-hub/types';
+import type { RateLimitInfo } from '@reasvyn/auth-types';
 
 export interface RateLimiterOptions {
   maxRequests: number;

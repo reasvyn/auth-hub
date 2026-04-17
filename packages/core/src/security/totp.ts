@@ -5,7 +5,7 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 
-import type { MFASetupData } from '@auth-hub/types';
+import type { MFASetupData } from '@reasvyn/auth-types';
 
 export interface TOTPOptions {
   issuer: string;

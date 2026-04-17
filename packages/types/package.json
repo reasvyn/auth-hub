@@ -1,5 +1,5 @@
 {
-  "name": "@auth-hub/types",
+  "name": "@reasvyn/auth-types",
   "version": "0.0.1",
   "description": "Shared TypeScript type definitions for Auth-Hub",
   "keywords": ["auth", "typescript", "types"],

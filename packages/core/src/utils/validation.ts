@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 
-import type { ValidationError } from '@auth-hub/types';
+import type { ValidationError } from '@reasvyn/auth-types';
 
 export const emailSchema = z.string().email('Invalid email address').toLowerCase();
 

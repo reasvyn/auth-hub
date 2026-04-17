@@ -1,5 +1,5 @@
 /**
- * @auth-hub/core - Core Authentication Logic
+ * @reasvyn/auth-core - Core Authentication Logic
  *
  * Framework-agnostic authentication utilities.
  */

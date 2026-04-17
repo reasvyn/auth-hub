@@ -1,11 +1,11 @@
-# @auth-hub/types
+# @reasvyn/auth-types
 
 Shared TypeScript type definitions for the Auth-Hub ecosystem.
 
 ## Installation
 
 ```bash
-npm install @auth-hub/types
+npm install @reasvyn/auth-types
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ import type {
   OAuthProvider,
   AuthError,
   ErrorCode,
-} from '@auth-hub/types';
+} from '@reasvyn/auth-types';
 ```
 
 ## Types Overview
