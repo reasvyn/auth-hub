@@ -1,4 +1,4 @@
-# Auth-Hub
+# Auth-TS
 
 A comprehensive TypeScript authentication library monorepo — modular, reusable, and framework-agnostic. Built for freelance projects, internal tools, and multi-app authentication. The foundation for a future hosted auth SaaS with centralized user management and monitoring.
 
@@ -26,7 +26,7 @@ Auth-Hub provides everything you need to add authentication to your applications
 ## Architecture
 
 ```
-auth-hub/
+auth-ts/
 ├── packages/
 │   ├── types/         # Shared TypeScript type definitions   (@reasvyn/auth-types)
 │   ├── core/          # Core auth logic — framework-agnostic (@reasvyn/auth-core)
@@ -48,14 +48,14 @@ auth-hub/
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@reasvyn/auth-types`](./packages/types) | Shared TypeScript type definitions | 0.0.1 |
-| [`@reasvyn/auth-core`](./packages/core) | Core authentication logic (framework-agnostic) | 0.0.1 |
-| [`@reasvyn/auth-react`](./packages/react) | React components & hooks (Tailwind, dark mode) | 0.0.1 |
-| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | HTTP client SDK | 0.0.1 |
-| [`@reasvyn/auth-express`](./packages/adapters/express) | Express.js middleware & route handlers | 0.0.1 |
-| [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs) | Next.js App Router, Edge Middleware & server helpers | 0.0.1 |
-| [`@reasvyn/auth-rbac`](./packages/rbac) | Role-Based Access Control engine, `<Can>` component, Express middleware | 0.0.1 |
-| [`@reasvyn/auth-team`](./packages/team) | Team management, invitations, role hierarchy, React UI | 0.0.1 |
+| [`@reasvyn/auth-types`](./packages/types) | Shared TypeScript type definitions | 0.1.0 |
+| [`@reasvyn/auth-core`](./packages/core) | Core authentication logic (framework-agnostic) | 0.1.0 |
+| [`@reasvyn/auth-react`](./packages/react) | React components & hooks (Tailwind, dark mode) | 0.1.0 |
+| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | HTTP client SDK | 0.1.0 |
+| [`@reasvyn/auth-express`](./packages/adapters/express) | Express.js middleware & route handlers | 0.1.0 |
+| [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs) | Next.js App Router, Edge Middleware & server helpers | 0.1.0 |
+| [`@reasvyn/auth-rbac`](./packages/rbac) | Role-Based Access Control engine, `<Can>` component, Express middleware | 0.1.0 |
+| [`@reasvyn/auth-team`](./packages/team) | Team management, invitations, role hierarchy, React UI | 0.1.0 |
 
 ## Installation
 
@@ -302,8 +302,8 @@ const { accessToken, refreshToken } = createTokenPair(
 ### Setup
 
 ```bash
-git clone https://github.com/reasvyn/auth-hub.git
-cd auth-hub
+git clone https://github.com/reasvyn/auth-ts.git
+cd auth-ts
 npm install
 npm run build
 ```
