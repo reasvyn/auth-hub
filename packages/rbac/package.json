@@ -1,6 +1,6 @@
 {
   "name": "@reasvyn/auth-rbac",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Role-Based Access Control (RBAC) engine for Auth-Hub — with permission inheritance, wildcards, and multi-app scoping",
   "keywords": ["auth", "rbac", "permissions", "roles", "typescript"],
   "license": "MIT",

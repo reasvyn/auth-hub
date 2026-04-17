@@ -1,6 +1,6 @@
 {
   "name": "@reasvyn/auth-node-sdk",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Node.js SDK client for Auth-Hub",
   "keywords": ["auth", "authentication", "sdk", "typescript", "nodejs"],
   "license": "MIT",

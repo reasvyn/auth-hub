@@ -1,6 +1,6 @@
 {
   "name": "@reasvyn/auth-team",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Team & organization management for Auth-Hub — invitations, roles, multi-team support",
   "keywords": ["auth", "teams", "organizations", "invitations", "typescript"],
   "license": "MIT",
