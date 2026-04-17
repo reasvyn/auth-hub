@@ -9,7 +9,9 @@ import type {
   ChangePasswordRequest,
   RefreshTokenRequest,
   OAuthProvider,
+  TwoFactorMethod,
 } from '@reasvyn/auth-types';
+
 import type { HttpClient } from '../http/HttpClient';
 
 export class AuthModule {
@@ -67,7 +69,10 @@ export class AuthModule {
     return this.http.post<AuthResponse>('/auth/oauth/callback', { provider, code, state });
   }
 
-  verifyMFA(code: string, token: string): Promise<AuthResponse> {
-    return this.http.post<AuthResponse>('/auth/mfa/verify', { code, mfaToken: token } satisfies MFAVerifyRequest);
+  verifyMFA(code: string, method: TwoFactorMethod): Promise<AuthResponse> {
+    return this.http.post<AuthResponse>(
+      '/auth/mfa/verify',
+      { code, method } satisfies Pick<MFAVerifyRequest, 'code' | 'method'>,
+    );
   }
 }

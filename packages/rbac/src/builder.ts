@@ -1,5 +1,5 @@
-import type { RoleDefinition, RBACConfig } from './types';
 import { RBACEngine } from './engine';
+import type { RBACConfig, RoleDefinition } from './types';
 
 /**
  * Fluent builder for defining RBAC roles.

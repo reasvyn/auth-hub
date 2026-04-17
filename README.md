@@ -1,6 +1,6 @@
 # Auth-TS
 
-A comprehensive TypeScript authentication library monorepo — modular, reusable, and framework-agnostic. Built for freelance projects, internal tools, and multi-app authentication. The foundation for a future hosted auth SaaS with centralized user management and monitoring.
+A TypeScript authentication monorepo for reusable auth packages: core primitives, UI, SDKs, and framework adapters. The repository is currently library-first; there is no checked-in app or docs site in this tree today.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
@@ -11,7 +11,7 @@ A comprehensive TypeScript authentication library monorepo — modular, reusable
 Auth-Hub provides everything you need to add authentication to your applications:
 
 - 🔐 **Email/Password authentication** with secure hashing (bcrypt)
-- 🌐 **OAuth2 support** for Google, GitHub, Discord, Facebook, Apple, Twitter
+- 🌐 **OAuth2 support** for Google, GitHub, Discord, Facebook, Microsoft, Twitter
 - 🔗 **Magic link** passwordless authentication
 - 🛡️ **MFA/TOTP** — setup, verify, disable, backup codes
 - ⚛️ **React components & hooks** — drop-in LoginForm, RegisterForm, MFA flows, dark mode
@@ -41,8 +41,17 @@ auth-ts/
 │   └── docs/          # Documentation site
 ├── turbo.json
 ├── tsconfig.json
+├── turbo.json
+├── tsconfig.json
 └── package.json
 ```
+
+## Repository Status
+
+- **Package manager:** npm
+- **Workspace runner:** Turborepo
+- **Repository shape:** packages only; no `apps/` directory is currently tracked
+- **Primary validation entrypoints:** `npm run lint`, `npm run type-check`, `npm run test`, `npm run build`
 
 ## Packages
 
@@ -305,6 +314,9 @@ const { accessToken, refreshToken } = createTokenPair(
 git clone https://github.com/reasvyn/auth-ts.git
 cd auth-ts
 npm install
+npm run lint
+npm run type-check
+npm run test
 npm run build
 ```
 
@@ -320,6 +332,18 @@ npm run build
 | `npm run type-check` | TypeScript type checking |
 | `npm run clean` | Clean all build outputs |
 
+### Release Workflow
+
+This repo uses **per-package semver** under npm workspaces.
+
+1. Update the target package version in its `package.json`.
+2. Update package README/root docs when the public API or usage changes.
+3. Run the usual root validation commands.
+4. Merge the version bump to the branch you release from.
+5. Trigger the manual GitHub Actions workflow **Publish Package** and pass the workspace package name, for example `@reasvyn/auth-core`.
+
+The workflow definition lives in [`.github/workflows/release-package.yml`](./.github/workflows/release-package.yml) and publishes a single workspace package using the checked-in version.
+
 ## Contributing
 
 We welcome contributions! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
@@ -330,10 +354,9 @@ We welcome contributions! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for g
 - [ ] Passkey/WebAuthn support
 - [ ] SMS-based OTP
 - [ ] Audit log & anomaly detection
-- [ ] Multi-tenant support
 - [ ] Admin SDK
-- [ ] Rate limiting utilities
-- [ ] CSRF protection helpers
+- [ ] First-party docs or example app in-repo
+- [ ] Package API stabilization and publishing automation
 - [ ] Svelte / Vue adapters
 
 ## License

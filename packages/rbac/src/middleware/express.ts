@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
+
 import type { RBACEngine } from '../engine';
 import type { Permission } from '../types';
 

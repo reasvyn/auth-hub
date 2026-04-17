@@ -1,6 +1,6 @@
-# Contributing to Auth-Hub
+# Contributing to Auth-TS
 
-Thank you for your interest in contributing to Auth-Hub! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Auth-TS. This document covers the repository workflow for the monorepo and its published `@reasvyn/*` packages.
 
 ## Code of Conduct
 
@@ -18,8 +18,8 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/auth-hub.git
-   cd auth-hub
+   git clone https://github.com/YOUR_USERNAME/auth-ts.git
+   cd auth-ts
    ```
 3. Install dependencies:
    ```bash
@@ -33,14 +33,17 @@ By participating in this project, you agree to abide by our Code of Conduct. Ple
 ## Project Structure
 
 ```
-auth-hub/
+auth-ts/
 ├── packages/
-│   ├── types/        # Shared TypeScript types
-│   ├── core/         # Core auth logic (framework-agnostic)
-│   ├── react/        # React components & hooks
-│   └── node-sdk/     # Node.js SDK
-├── apps/
-│   └── docs/         # Documentation site
+│   ├── types/              # Shared TypeScript types
+│   ├── core/               # Core auth logic
+│   ├── react/              # React components & hooks
+│   ├── node-sdk/           # HTTP SDK
+│   ├── rbac/               # RBAC engine + bindings
+│   ├── team/               # Team management module
+│   └── adapters/
+│       ├── express/        # Express adapter
+│       └── nextjs/         # Next.js adapter
 ├── turbo.json        # Turborepo config
 ├── tsconfig.json     # Base TypeScript config
 └── package.json      # Root workspace
@@ -65,11 +68,12 @@ auth-hub/
 
 2. Make your changes with clear, focused commits
 
-3. Run tests and linting:
+3. Run root validation commands:
    ```bash
    npm run lint
    npm run type-check
    npm run test
+   npm run build
    ```
 
 4. Format your code:
@@ -77,7 +81,9 @@ auth-hub/
    npm run format
    ```
 
-5. Push your branch and open a Pull Request
+5. If you changed dependencies or the root manifest, refresh the lockfile with `npm install`
+
+6. Push your branch and open a Pull Request
 
 ### Commit Convention
 
@@ -136,6 +142,7 @@ docs(types): add JSDoc comments to AuthError
    ```
 
 4. Add it to the workspace in the root `package.json`
+5. Add package-level scripts for `build`, `lint`, `type-check`, and `clean`, following the existing packages
 
 ## Testing
 
@@ -149,6 +156,18 @@ docs(types): add JSDoc comments to AuthError
 - Update relevant README files when adding features
 - Add JSDoc comments to exported functions and types
 - Include usage examples in package READMEs
+
+## Release Workflow
+
+Releases are **per package**, not one global monorepo version.
+
+1. Bump the target package version in that package's `package.json`.
+2. Update any affected README or usage docs.
+3. Run the root validation commands.
+4. Merge the release commit.
+5. Trigger the **Publish Package** workflow in GitHub Actions with the workspace name, such as `@reasvyn/auth-react`.
+
+The workflow publishes the selected workspace package using npm and expects `NPM_TOKEN` to be configured in repository secrets.
 
 ## Pull Request Process
 

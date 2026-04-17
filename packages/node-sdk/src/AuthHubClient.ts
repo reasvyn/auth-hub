@@ -1,8 +1,8 @@
 import { HttpClient } from './http/HttpClient';
 import { AuthModule } from './modules/AuthModule';
-import { UsersModule } from './modules/UsersModule';
-import { SessionsModule } from './modules/SessionsModule';
 import { MFAModule } from './modules/MFAModule';
+import { SessionsModule } from './modules/SessionsModule';
+import { UsersModule } from './modules/UsersModule';
 
 export interface AuthHubClientConfig {
   /** Base URL of your auth server. Example: 'https://auth.myapp.com' */
@@ -24,8 +24,8 @@ export class AuthHubClient {
   constructor(config: AuthHubClientConfig) {
     this.http = new HttpClient({
       baseUrl: config.baseUrl,
-      timeout: config.timeout,
-      headers: config.headers,
+      ...(config.timeout !== undefined ? { timeout: config.timeout } : {}),
+      ...(config.headers !== undefined ? { headers: config.headers } : {}),
     });
 
     this.auth = new AuthModule(this.http);

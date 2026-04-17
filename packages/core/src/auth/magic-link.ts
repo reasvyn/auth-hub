@@ -36,7 +36,12 @@ export function generateMagicLinkToken(
     ? `${baseUrl}?token=${encodeURIComponent(token)}`
     : undefined;
 
-  return { token, email, expiresAt, url };
+  return {
+    token,
+    email,
+    expiresAt,
+    ...(url ? { url } : {}),
+  };
 }
 
 /**

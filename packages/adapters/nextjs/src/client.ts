@@ -21,7 +21,14 @@
  * ```
  */
 import type { AuthAdapter } from '@reasvyn/auth-react';
-import type { AuthResponse, User, Session, MFASetupData, TwoFactorMethod, OAuthProvider } from '@reasvyn/auth-types';
+import type {
+  ActiveSession,
+  AuthResponse,
+  MFASetupData,
+  OAuthProvider,
+  TwoFactorMethod,
+  User,
+} from '@reasvyn/auth-types';
 
 export interface NextJsAdapterOptions {
   /** Base path for auth API routes. Default: '/api/auth' */
@@ -100,7 +107,7 @@ export function createNextJsAdapter(options: NextJsAdapterOptions = {}): AuthAda
     disableMFA: (method: TwoFactorMethod, code: string) =>
       apiFetch<void>(`${base}/mfa/disable`, { method: 'POST', body: JSON.stringify({ method, code }) }),
 
-    getSessions: () => apiFetch<Session[]>(`${base}/sessions`),
+    getSessions: () => apiFetch<ActiveSession[]>(`${base}/sessions`),
 
     revokeSession: (sessionId: string) =>
       apiFetch<void>(`${base}/sessions/${sessionId}`, { method: 'DELETE' }),

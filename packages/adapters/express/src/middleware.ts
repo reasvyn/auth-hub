@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import { verifyJWT, isAuthHubError, Errors } from '@reasvyn/auth-core';
+import { isAuthHubError, verifyJWT } from '@reasvyn/auth-core';
 import type { JWTPayload } from '@reasvyn/auth-types';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
 export interface AuthMiddlewareOptions {
   /** JWT access token secret */
@@ -13,11 +13,9 @@ export interface AuthMiddlewareOptions {
   onUnauthorized?: (req: Request, res: Response, error: string) => void;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      auth?: JWTPayload & { token: string };
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    auth?: JWTPayload & { token: string };
   }
 }
 
@@ -47,7 +45,7 @@ export function requireAuth(options: AuthMiddlewareOptions): RequestHandler {
     }
 
     try {
-      const payload = verifyJWT(token, options.secret) as JWTPayload;
+      const payload = verifyJWT(token, options.secret);
       req.auth = { ...payload, token };
       next();
     } catch (err) {
@@ -70,7 +68,7 @@ export function optionalAuth(options: AuthMiddlewareOptions): RequestHandler {
     const token = extractToken(req, options);
     if (token) {
       try {
-        const payload = verifyJWT(token, options.secret) as JWTPayload;
+        const payload = verifyJWT(token, options.secret);
         req.auth = { ...payload, token };
       } catch {
         // Ignore invalid tokens — just don't attach auth

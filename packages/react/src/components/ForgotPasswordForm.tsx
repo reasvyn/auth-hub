@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFormState } from '../hooks/useUser';
-import { Card, Heading, Subheading, ErrorAlert, SuccessAlert, Field, Input, Button, TextButton } from './ui';
 import type { ForgotPasswordFormProps } from '../types';
 
+import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton } from './ui';
+
 export function ForgotPasswordForm({ onSuccess, onError, onBack, className }: ForgotPasswordFormProps) {
-  const { requestPasswordReset } = useAuth();
+  const auth = useAuth();
   const { values, handleChange, submitting, setSubmitting } = useFormState({ email: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +17,7 @@ export function ForgotPasswordForm({ onSuccess, onError, onBack, className }: Fo
     setError(null);
     setSubmitting(true);
     try {
-      await requestPasswordReset(values.email);
+      await auth.requestPasswordReset(values.email);
       setSent(true);
       onSuccess?.();
     } catch (err) {
@@ -49,7 +51,12 @@ export function ForgotPasswordForm({ onSuccess, onError, onBack, className }: Fo
       <div className="flex flex-col gap-4">
         {error && <ErrorAlert message={error} />}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           <Field label="Email" id="forgot-email">
             <Input
               id="forgot-email"

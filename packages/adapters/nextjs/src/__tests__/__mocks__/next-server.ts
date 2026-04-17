@@ -11,11 +11,12 @@ export class NextResponse extends Response {
     });
   }
 
-  static redirect(url: URL | string, init?: ResponseInit): NextResponse {
+  static redirect(url: URL | string, init?: number | ResponseInit): NextResponse {
+    const responseInit = typeof init === 'number' ? { status: init } : init;
     return new NextResponse(null, {
-      ...init,
-      status: 302,
-      headers: { location: url.toString(), ...(init?.headers ?? {}) },
+      ...responseInit,
+      status: responseInit?.status ?? 302,
+      headers: { location: url.toString(), ...(responseInit?.headers ?? {}) },
     });
   }
 

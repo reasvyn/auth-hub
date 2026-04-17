@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFormState } from '../hooks/useUser';
-import { OAuthButton } from './OAuthButton';
-import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton, Divider } from './ui';
 import type { LoginFormProps } from '../types';
+
+import { OAuthButton } from './OAuthButton';
+import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton, Divider } from './ui';
 
 export function LoginForm({
   onSuccess,
@@ -13,22 +14,22 @@ export function LoginForm({
   enableMagicLink = false,
   className,
 }: LoginFormProps) {
-  const { login, sendMagicLink, status, error, clearError } = useAuth();
+  const auth = useAuth();
   const { values, handleChange, submitting, setSubmitting } = useFormState({ email: '', password: '' });
   const [magicLinkMode, setMagicLinkMode] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    auth.clearError();
     setSubmitting(true);
     try {
       if (magicLinkMode) {
-        await sendMagicLink(values.email);
+        await auth.sendMagicLink(values.email);
         setMagicLinkSent(true);
       } else {
-        await login({ email: values.email, password: values.password });
-        onSuccess?.({ user: null as any, accessToken: '', refreshToken: '' });
+        await auth.login({ email: values.email, password: values.password });
+        onSuccess?.();
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
@@ -60,9 +61,14 @@ export function LoginForm({
       {!magicLinkMode && <Subheading>Welcome back</Subheading>}
 
       <div className="flex flex-col gap-4">
-        {error && <ErrorAlert message={error} />}
+        {auth.error && <ErrorAlert message={auth.error} />}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           <Field label="Email" id="login-email">
             <Input
               id="login-email"
@@ -89,10 +95,10 @@ export function LoginForm({
             </Field>
           )}
 
-          <Button
-            type="submit"
-            loading={submitting || status === 'loading'}
-          >
+            <Button
+              type="submit"
+              loading={submitting || auth.status === 'loading'}
+            >
             {magicLinkMode ? 'Send Magic Link' : 'Sign in'}
           </Button>
         </form>

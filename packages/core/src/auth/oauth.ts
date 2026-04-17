@@ -75,7 +75,7 @@ export function getOAuthAuthorizationUrl(
   return {
     url: `${baseUrl}?${params.toString()}`,
     state,
-    codeVerifier,
+    ...(codeVerifier ? { codeVerifier } : {}),
   };
 }
 

@@ -1,6 +1,8 @@
-import { getServerSession, verifyAccessToken, withAuth } from '../server';
-import { createAuthMiddleware } from '../middleware';
 import { createJWT } from '@reasvyn/auth-core';
+
+import { createAuthMiddleware } from '../middleware';
+import { getServerSession, verifyAccessToken, withAuth } from '../server';
+
 import { NextRequest } from './__mocks__/next-server';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -23,13 +25,13 @@ function makeToken(role: 'user' | 'admin' | 'super_admin' = 'user'): string {
 describe('getServerSession()', () => {
   it('returns null when required headers are missing', async () => {
     const headers = new Headers();
-    const session = await getServerSession(headers);
+    const session = getServerSession(headers);
     expect(session).toBeNull();
   });
 
   it('returns null when only some headers are present', async () => {
     const headers = new Headers({ 'x-auth-user-id': 'u1' });
-    const session = await getServerSession(headers);
+    const session = getServerSession(headers);
     expect(session).toBeNull();
   });
 
@@ -39,7 +41,7 @@ describe('getServerSession()', () => {
       'x-auth-user-email': 'user@example.com',
       'x-auth-user-role': 'admin',
     });
-    const session = await getServerSession(headers);
+    const session = getServerSession(headers);
 
     expect(session).not.toBeNull();
     expect(session!.userId).toBe('u1');
@@ -53,7 +55,7 @@ describe('getServerSession()', () => {
       'x-auth-user-email': 'a@b.com',
       'x-auth-user-role': 'user',
     });
-    const session = await getServerSession(headers);
+    const session = getServerSession(headers);
     expect(session!.raw.sub).toBe('u2');
     expect(session!.raw.email).toBe('a@b.com');
   });

@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
 import type { User } from '@reasvyn/auth-types';
+import { useCallback, useState } from 'react';
+
 import { useAuth } from './useAuth';
 
 interface UseUserReturn {
@@ -23,7 +24,7 @@ export function useUser(): UseUserReturn {
   );
 
   const hasPermission = useCallback(
-    (permission: string) => {
+    (_permission: string) => {
       if (!user) return false;
       if (user.role === 'super_admin') return true;
       return false; // Extend with actual permissions array from user object
@@ -31,16 +32,20 @@ export function useUser(): UseUserReturn {
     [user],
   );
 
-  const isEmailVerified = useCallback(() => user?.isEmailVerified ?? false, [user]);
+  const isEmailVerified = useCallback(() => user?.emailVerified ?? false, [user]);
 
-  const isMFAEnabled = useCallback(() => user?.isMFAEnabled ?? false, [user]);
+  const isMFAEnabled = useCallback(() => user?.settings?.twoFactorEnabled ?? false, [user]);
 
   const displayName = useCallback(() => {
     if (!user) return '';
-    return user.name ?? user.email ?? '';
+    return (
+      user.profile?.displayName ??
+      [user.profile?.firstName, user.profile?.lastName].filter(Boolean).join(' ') ??
+      user.email
+    );
   }, [user]);
 
-  const avatarUrl = useCallback(() => user?.avatarUrl ?? null, [user]);
+  const avatarUrl = useCallback(() => user?.profile?.avatarUrl ?? null, [user]);
 
   return {
     user,

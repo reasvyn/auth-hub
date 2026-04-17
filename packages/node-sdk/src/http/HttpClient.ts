@@ -67,9 +67,9 @@ export class HttpClient {
       const response = await fetch(url, {
         method,
         headers: reqHeaders,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
         signal: options.signal ?? controller.signal,
-      });
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      } satisfies RequestInit);
 
       clearTimeout(timer);
 
@@ -96,27 +96,49 @@ export class HttpClient {
       if (err instanceof DOMException && err.name === 'AbortError') {
         throw new HttpError(408, 'REQUEST_TIMEOUT', 'Request timed out');
       }
-      throw new HttpError(0, 'NETWORK_ERROR', (err as Error).message);
+      throw new HttpError(
+        0,
+        'NETWORK_ERROR',
+        err instanceof Error ? err.message : 'Unknown network error',
+      );
     }
   }
 
   get<T>(path: string, headers?: Record<string, string>) {
-    return this.request<T>(path, { method: 'GET', headers });
+    return this.request<T>(path, {
+      method: 'GET',
+      ...(headers !== undefined ? { headers } : {}),
+    });
   }
 
   post<T>(path: string, body?: unknown, headers?: Record<string, string>) {
-    return this.request<T>(path, { method: 'POST', body, headers });
+    return this.request<T>(path, {
+      method: 'POST',
+      ...(body !== undefined ? { body } : {}),
+      ...(headers !== undefined ? { headers } : {}),
+    });
   }
 
   put<T>(path: string, body?: unknown, headers?: Record<string, string>) {
-    return this.request<T>(path, { method: 'PUT', body, headers });
+    return this.request<T>(path, {
+      method: 'PUT',
+      ...(body !== undefined ? { body } : {}),
+      ...(headers !== undefined ? { headers } : {}),
+    });
   }
 
   patch<T>(path: string, body?: unknown, headers?: Record<string, string>) {
-    return this.request<T>(path, { method: 'PATCH', body, headers });
+    return this.request<T>(path, {
+      method: 'PATCH',
+      ...(body !== undefined ? { body } : {}),
+      ...(headers !== undefined ? { headers } : {}),
+    });
   }
 
   delete<T>(path: string, headers?: Record<string, string>) {
-    return this.request<T>(path, { method: 'DELETE', headers });
+    return this.request<T>(path, {
+      method: 'DELETE',
+      ...(headers !== undefined ? { headers } : {}),
+    });
   }
 }

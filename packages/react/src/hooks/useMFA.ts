@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
 import type { AuthResponse, MFASetupData, TwoFactorMethod } from '@reasvyn/auth-types';
+import { useCallback, useState } from 'react';
+
 import type { AuthAdapter } from '../types';
 
 interface UseMFAReturn {

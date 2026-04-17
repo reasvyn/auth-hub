@@ -128,7 +128,11 @@ describe('auth.register()', () => {
 
   it('calls POST /auth/register', async () => {
     mockFetch(200, { success: true, data: { user: { id: 'u2' }, accessToken: 'tok' } });
-    await client.auth.register({ email: 'new@example.com', password: 'pass', name: 'New User' });
+    await client.auth.register({
+      email: 'new@example.com',
+      password: 'pass',
+      displayName: 'New User',
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       'https://auth.example.com/auth/register',
       expect.objectContaining({ method: 'POST' }),
@@ -171,9 +175,9 @@ describe('users.me()', () => {
 describe('users.updateProfile()', () => {
   it('calls PATCH /users/me/profile', async () => {
     const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
-    mockFetch(200, { success: true, data: { id: 'u1', name: 'Updated' } });
+    mockFetch(200, { success: true, data: { id: 'u1', displayName: 'Updated' } });
 
-    await client.users.updateProfile({ name: 'Updated' });
+    await client.users.updateProfile({ displayName: 'Updated' });
 
     expect(global.fetch).toHaveBeenCalledWith(
       'https://auth.example.com/users/me/profile',

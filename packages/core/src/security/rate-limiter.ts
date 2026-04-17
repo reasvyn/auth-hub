@@ -59,7 +59,7 @@ export class RateLimiter {
         limit: this.maxRequests,
         remaining,
         resetAt: new Date(entry.resetAt),
-        retryAfter: allowed ? undefined : Math.ceil((entry.resetAt - now) / 1000),
+        ...(!allowed ? { retryAfter: Math.ceil((entry.resetAt - now) / 1000) } : {}),
       },
     };
   }

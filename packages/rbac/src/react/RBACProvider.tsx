@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
+
 import type { RBACEngine } from '../engine';
 import type { Permission } from '../types';
+
 import { RBACContext } from './RBACContext';
 
 export interface RBACProviderProps {
@@ -32,13 +34,16 @@ export interface RBACProviderProps {
  * }
  */
 export function RBACProvider({ rbac, role, children }: RBACProviderProps) {
-  const value = useMemo(() => ({
-    rbac,
-    role,
-    can: (permission: Permission) => role ? rbac.can(role).do(permission) : false,
-    canAny: (permissions: Permission[]) => role ? rbac.can(role).doAny(permissions) : false,
-    canAll: (permissions: Permission[]) => role ? rbac.can(role).doAll(permissions) : false,
-  }), [rbac, role]);
+  const value = useMemo(
+    () => ({
+      rbac,
+      role,
+      can: (permission: Permission) => (role ? rbac.can(role).do(permission) : false),
+      canAny: (permissions: Permission[]) => (role ? rbac.can(role).doAny(permissions) : false),
+      canAll: (permissions: Permission[]) => (role ? rbac.can(role).doAll(permissions) : false),
+    }),
+    [rbac, role],
+  );
 
   return (
     <RBACContext.Provider value={value}>

@@ -1,7 +1,80 @@
-import React, { useCallback, useEffect, useReducer, useRef } from 'react';
-import type { User, LoginCredentials, RegisterCredentials, OAuthProvider } from '@reasvyn/auth-types';
-import { AuthContext } from './AuthContext';
+import type {
+  AuthResponse,
+  AuthUser,
+  LoginCredentials,
+  OAuthProvider,
+  RegisterCredentials,
+  User,
+  UserRole,
+} from '@reasvyn/auth-types';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
+
 import type { AuthState, AuthProviderProps } from '../types';
+
+import { AuthContext } from './AuthContext';
+
+
+type TokenBearingAuthResponse = AuthResponse & {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+};
+
+function isUser(value: User | AuthUser): value is User {
+  return 'createdAt' in value && 'updatedAt' in value && 'status' in value;
+}
+
+function normalizeRole(role: string): UserRole {
+  if (role === 'admin' || role === 'super_admin') {
+    return role;
+  }
+  return 'user';
+}
+
+function normalizeUser(user: User | AuthUser): User {
+  if (isUser(user)) {
+    return user;
+  }
+
+  const now = new Date();
+  return {
+    id: user.id,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    createdAt: now,
+    updatedAt: now,
+    role: normalizeRole(user.role),
+    status: 'active',
+    profile: {
+      userId: user.id,
+      ...(user.displayName !== undefined ? { displayName: user.displayName } : {}),
+      ...(user.avatarUrl !== undefined ? { avatarUrl: user.avatarUrl } : {}),
+    },
+    settings: {
+      userId: user.id,
+      twoFactorEnabled: false,
+    },
+  };
+}
+
+function extractSessionState(response: AuthResponse): {
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresInMs: number | null;
+} {
+  const legacy = response as TokenBearingAuthResponse;
+  const accessToken = legacy.accessToken ?? response.session?.accessToken ?? null;
+  const refreshToken = legacy.refreshToken ?? response.session?.refreshToken ?? null;
+
+  let expiresInMs: number | null = null;
+  if (legacy.expiresIn !== undefined) {
+    expiresInMs = legacy.expiresIn * 1000;
+  } else if (response.session?.expiresAt) {
+    expiresInMs = Math.max(new Date(response.session.expiresAt).getTime() - Date.now(), 0);
+  }
+
+  return { accessToken, refreshToken, expiresInMs };
+}
 
 type AuthAction =
   | { type: 'SET_LOADING' }
@@ -56,22 +129,30 @@ export function AuthProvider({
     (expiresIn: number) => {
       clearRefreshTimer();
       const delay = Math.max(expiresIn - refreshBeforeExpiry, 5_000);
-      refreshTimerRef.current = setTimeout(async () => {
-        try {
-          const stored = typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
-          if (!stored) return;
-          const response = await adapter.refreshToken(stored);
-          if (response.user && response.accessToken) {
-            dispatch({ type: 'SET_USER', user: response.user, accessToken: response.accessToken });
-            if (response.refreshToken) {
-              localStorage.setItem('auth_refresh_token', response.refreshToken);
+      refreshTimerRef.current = setTimeout(() => {
+        void (async () => {
+          try {
+            const stored =
+              typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
+            if (!stored) return;
+            const response = await adapter.refreshToken(stored);
+            const session = extractSessionState(response);
+            if (response.user && session.accessToken) {
+              dispatch({
+                type: 'SET_USER',
+                user: normalizeUser(response.user),
+                accessToken: session.accessToken,
+              });
+              if (session.refreshToken) {
+                localStorage.setItem('auth_refresh_token', session.refreshToken);
+              }
+              if (session.expiresInMs) scheduleRefresh(session.expiresInMs);
             }
-            if (response.expiresIn) scheduleRefresh(response.expiresIn * 1000);
+          } catch {
+            dispatch({ type: 'LOGOUT' });
+            localStorage.removeItem('auth_refresh_token');
           }
-        } catch {
-          dispatch({ type: 'LOGOUT' });
-          localStorage.removeItem('auth_refresh_token');
-        }
+        })();
       }, delay);
     },
     [adapter, clearRefreshTimer, refreshBeforeExpiry],
@@ -85,13 +166,18 @@ export function AuthProvider({
         const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
         if (refreshToken) {
           const response = await adapter.refreshToken(refreshToken);
+          const session = extractSessionState(response);
           if (cancelled) return;
-          if (response.user && response.accessToken) {
-            dispatch({ type: 'SET_USER', user: response.user, accessToken: response.accessToken });
-            if (response.refreshToken) {
-              localStorage.setItem('auth_refresh_token', response.refreshToken);
+          if (response.user && session.accessToken) {
+            dispatch({
+              type: 'SET_USER',
+              user: normalizeUser(response.user),
+              accessToken: session.accessToken,
+            });
+            if (session.refreshToken) {
+              localStorage.setItem('auth_refresh_token', session.refreshToken);
             }
-            if (response.expiresIn) scheduleRefresh(response.expiresIn * 1000);
+            if (session.expiresInMs) scheduleRefresh(session.expiresInMs);
             return;
           }
         }
@@ -119,13 +205,15 @@ export function AuthProvider({
       dispatch({ type: 'SET_LOADING' });
       try {
         const response = await adapter.login(credentials);
-        if (!response.user || !response.accessToken) throw new Error('Invalid response from login');
-        dispatch({ type: 'SET_USER', user: response.user, accessToken: response.accessToken });
-        if (response.refreshToken) {
-          localStorage.setItem('auth_refresh_token', response.refreshToken);
+        const session = extractSessionState(response);
+        if (!response.user || !session.accessToken) throw new Error('Invalid response from login');
+        const user = normalizeUser(response.user);
+        dispatch({ type: 'SET_USER', user, accessToken: session.accessToken });
+        if (session.refreshToken) {
+          localStorage.setItem('auth_refresh_token', session.refreshToken);
         }
-        if (response.expiresIn) scheduleRefresh(response.expiresIn * 1000);
-        onLogin?.(response.user);
+        if (session.expiresInMs) scheduleRefresh(session.expiresInMs);
+        onLogin?.(user);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Login failed';
         dispatch({ type: 'SET_ERROR', error: message });
@@ -140,13 +228,15 @@ export function AuthProvider({
       dispatch({ type: 'SET_LOADING' });
       try {
         const response = await adapter.register(credentials);
-        if (!response.user || !response.accessToken) throw new Error('Invalid response from register');
-        dispatch({ type: 'SET_USER', user: response.user, accessToken: response.accessToken });
-        if (response.refreshToken) {
-          localStorage.setItem('auth_refresh_token', response.refreshToken);
+        const session = extractSessionState(response);
+        if (!response.user || !session.accessToken) throw new Error('Invalid response from register');
+        const user = normalizeUser(response.user);
+        dispatch({ type: 'SET_USER', user, accessToken: session.accessToken });
+        if (session.refreshToken) {
+          localStorage.setItem('auth_refresh_token', session.refreshToken);
         }
-        if (response.expiresIn) scheduleRefresh(response.expiresIn * 1000);
-        onLogin?.(response.user);
+        if (session.expiresInMs) scheduleRefresh(session.expiresInMs);
+        onLogin?.(user);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Registration failed';
         dispatch({ type: 'SET_ERROR', error: message });

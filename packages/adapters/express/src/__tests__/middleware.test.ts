@@ -1,6 +1,7 @@
-import type { Request, Response, NextFunction } from 'express';
-import { requireAuth, optionalAuth, requireRole } from '../middleware';
 import { createJWT } from '@reasvyn/auth-core';
+import type { Request, Response, NextFunction } from 'express';
+
+import { requireAuth, optionalAuth, requireRole } from '../middleware';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -30,9 +31,9 @@ function mockReq(overrides: Partial<Request> = {}): Request {
 }
 
 function mockRes(): Response & { _status: number; _body: unknown } {
-  const res = {
+  const res: { _status: number; _body: unknown; status(code: number): typeof res; json(body: unknown): typeof res } = {
     _status: 200,
-    _body: null,
+    _body: null as unknown,
     status(code: number) {
       this._status = code;
       return this;

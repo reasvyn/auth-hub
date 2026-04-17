@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
-import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton } from './ui';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+
 import type { MFAVerifyFormProps } from '../types';
 
-export function MFAVerifyForm({ method = 'totp', onSuccess, onError, onBack, className }: MFAVerifyFormProps) {
+import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton } from './ui';
+
+export function MFAVerifyForm({
+  method = 'totp',
+  onVerify,
+  onSuccess,
+  onError,
+  onBack,
+  className,
+}: MFAVerifyFormProps) {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      // Verification is handled by the parent page using useMFA()
-      // This component emits onSuccess so the parent can call verifyMFA
-      onSuccess?.({} as any);
+      const response = onVerify ? await onVerify(code, method) : undefined;
+      onSuccess?.(response ?? undefined);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Verification failed';
       setError(msg);
@@ -41,7 +50,12 @@ export function MFAVerifyForm({ method = 'totp', onSuccess, onError, onBack, cla
       <div className="flex flex-col gap-4">
         {error && <ErrorAlert message={error} />}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           <Field label="Verification code" id="mfa-verify-code">
             <Input
               id="mfa-verify-code"

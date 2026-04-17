@@ -1,6 +1,7 @@
 import { useContext } from 'react';
-import { RBACContext } from './RBACContext';
+
 import type { RBACContextValue } from './RBACContext';
+import { RBACContext } from './RBACContext';
 
 /**
  * Access the RBAC context. Must be used inside <RBACProvider>.

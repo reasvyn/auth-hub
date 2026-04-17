@@ -4,7 +4,7 @@ import type {
   LoginCredentials,
   RegisterCredentials,
   OAuthProvider,
-  Session,
+  ActiveSession,
   MFASetupData,
   TwoFactorMethod,
 } from '@reasvyn/auth-types';
@@ -28,7 +28,7 @@ export interface AuthAdapter {
   setupMFA?(method: TwoFactorMethod): Promise<MFASetupData>;
   verifyMFA?(code: string, method: TwoFactorMethod): Promise<AuthResponse>;
   disableMFA?(method: TwoFactorMethod, code: string): Promise<void>;
-  getSessions?(): Promise<Session[]>;
+  getSessions?(): Promise<ActiveSession[]>;
   revokeSession?(sessionId: string): Promise<void>;
   revokeAllSessions?(): Promise<void>;
 }
@@ -74,7 +74,7 @@ export interface AuthProviderProps {
 // ----- Component Props -----
 
 export interface LoginFormProps {
-  onSuccess?: (response: AuthResponse) => void;
+  onSuccess?: (response?: AuthResponse) => void;
   onError?: (error: string) => void;
   providers?: OAuthProvider[];
   enableMagicLink?: boolean;
@@ -83,7 +83,7 @@ export interface LoginFormProps {
 }
 
 export interface RegisterFormProps {
-  onSuccess?: (response: AuthResponse) => void;
+  onSuccess?: (response?: AuthResponse) => void;
   onError?: (error: string) => void;
   providers?: OAuthProvider[];
   redirectTo?: string;
@@ -105,7 +105,9 @@ export interface ChangePasswordFormProps {
 
 export interface MFASetupFormProps {
   method: TwoFactorMethod;
-  onSuccess?: (data: MFASetupData) => void;
+  setupData?: MFASetupData | null;
+  onVerify?: (code: string) => Promise<MFASetupData | void> | MFASetupData | void;
+  onSuccess?: (data?: MFASetupData) => void;
   onError?: (error: string) => void;
   onCancel?: () => void;
   className?: string;
@@ -113,7 +115,8 @@ export interface MFASetupFormProps {
 
 export interface MFAVerifyFormProps {
   method?: TwoFactorMethod;
-  onSuccess?: (response: AuthResponse) => void;
+  onVerify?: (code: string, method: TwoFactorMethod) => Promise<AuthResponse | void> | AuthResponse | void;
+  onSuccess?: (response?: AuthResponse) => void;
   onError?: (error: string) => void;
   onBack?: () => void;
   className?: string;

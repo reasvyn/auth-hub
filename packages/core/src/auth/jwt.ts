@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import type { JWTPayload, TokenPair } from '@reasvyn/auth-types';
 
 export interface JWTOptions {
-  expiresIn?: string | number;
+  expiresIn?: jwt.SignOptions['expiresIn'];
   issuer?: string;
   audience?: string | string[];
   jwtId?: string;
@@ -22,13 +22,19 @@ export function createJWT(
   options: JWTOptions = {},
 ): string {
   const { expiresIn = '15m', issuer, audience, jwtId } = options;
+  const signOptions: jwt.SignOptions = { expiresIn };
 
-  return jwt.sign(payload, secret, {
-    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
-    ...(issuer && { issuer }),
-    ...(audience && { audience }),
-    ...(jwtId && { jwtid: jwtId }),
-  });
+  if (issuer) {
+    signOptions.issuer = issuer;
+  }
+  if (audience) {
+    signOptions.audience = audience;
+  }
+  if (jwtId) {
+    signOptions.jwtid = jwtId;
+  }
+
+  return jwt.sign(payload, secret, signOptions);
 }
 
 /**
@@ -55,8 +61,8 @@ export function createTokenPair(
   accessSecret: string,
   refreshSecret: string,
   options: {
-    accessTokenExpiry?: string;
-    refreshTokenExpiry?: string;
+    accessTokenExpiry?: jwt.SignOptions['expiresIn'];
+    refreshTokenExpiry?: jwt.SignOptions['expiresIn'];
     issuer?: string;
     audience?: string | string[];
   } = {},
@@ -69,17 +75,24 @@ export function createTokenPair(
   } = options;
 
   const now = new Date();
+  const sharedOptions: JWTOptions = {};
+
+  if (issuer) {
+    sharedOptions.issuer = issuer;
+  }
+  if (audience) {
+    sharedOptions.audience = audience;
+  }
 
   const accessToken = createJWT(payload, accessSecret, {
     expiresIn: accessTokenExpiry,
-    issuer,
-    audience,
+    ...sharedOptions,
   });
 
   const refreshToken = createJWT(
     { sub: payload.sub, email: payload.email, role: payload.role, type: 'refresh' },
     refreshSecret,
-    { expiresIn: refreshTokenExpiry, issuer, audience },
+    { expiresIn: refreshTokenExpiry, ...sharedOptions },
   );
 
   const accessTokenExpiresAt = new Date(now.getTime() + parseDuration(accessTokenExpiry));
@@ -110,8 +123,9 @@ export function isJWTExpired(token: string): boolean {
 /**
  * Parse a duration string to milliseconds (e.g. '15m', '7d', '1h')
  */
-function parseDuration(duration: string | number): number {
+function parseDuration(duration: jwt.SignOptions['expiresIn']): number {
   if (typeof duration === 'number') return duration * 1000;
+  if (typeof duration !== 'string') return 900_000;
   const match = /^(\d+)([smhd])$/.exec(duration);
   if (!match) return 900_000; // default 15 min
   const value = parseInt(match[1], 10);

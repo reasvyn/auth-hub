@@ -2,7 +2,7 @@
  * Server-side helpers for Next.js App Router.
  * Use inside Server Components, Route Handlers, and Server Actions.
  */
-import { verifyJWT, isAuthHubError } from '@reasvyn/auth-core';
+import { verifyJWT } from '@reasvyn/auth-core';
 import type { JWTPayload } from '@reasvyn/auth-types';
 
 export interface AuthSession {
@@ -21,13 +21,13 @@ export interface GetServerSessionOptions {
  * Get the auth session from request headers (forwarded by createAuthMiddleware).
  * Safe to call in Server Components — reads from `x-auth-*` headers.
  */
-export async function getServerSession(
+export function getServerSession(
   headers: Headers,
   _options?: GetServerSessionOptions,
-): Promise<AuthSession | null> {
+): AuthSession | null {
   const userId = headers.get('x-auth-user-id');
   const email = headers.get('x-auth-user-email');
-  const role = headers.get('x-auth-user-role') as JWTPayload['role'] | null;
+  const role = headers.get('x-auth-user-role');
 
   if (!userId || !email || !role) return null;
 
@@ -35,7 +35,7 @@ export async function getServerSession(
     userId,
     email,
     role,
-    raw: { sub: userId, email, role } as JWTPayload,
+    raw: { sub: userId, email, role },
   };
 }
 
@@ -44,7 +44,7 @@ export async function getServerSession(
  */
 export function verifyAccessToken(token: string, secret: string): JWTPayload | null {
   try {
-    return verifyJWT(token, secret) as JWTPayload;
+    return verifyJWT(token, secret);
   } catch {
     return null;
   }

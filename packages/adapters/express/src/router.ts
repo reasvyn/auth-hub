@@ -1,21 +1,21 @@
-import type { Request, Response, NextFunction, Router } from 'express';
 import {
-  hashPassword,
-  verifyPassword,
+  Errors,
   createTokenPair,
-  verifyJWT,
   generateEmailVerificationToken,
-  verifyEmailVerificationToken,
   generateMagicLinkToken,
-  verifyMagicLinkToken,
-  safeValidate,
+  hashPassword,
+  isAuthHubError,
   loginSchema,
   registerSchema,
-  Errors,
-  isAuthHubError,
+  safeValidate,
+  verifyEmailVerificationToken,
+  verifyMagicLinkToken,
+  verifyJWT,
+  verifyPassword,
 } from '@reasvyn/auth-core';
-import type { User, JWTPayload } from '@reasvyn/auth-types';
-import { AUTH_CONSTANTS } from '@reasvyn/auth-core';
+import type { User } from '@reasvyn/auth-types';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 
 export interface AuthRouterServices {
   /**
@@ -88,30 +88,41 @@ function sendError(res: Response, error: unknown, fallbackStatus = 500) {
   res.status(fallbackStatus).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' } });
 }
 
+function runRoute(
+  handler: (req: Request, res: Response) => Promise<void>,
+): (req: Request, res: Response) => void {
+  return (req, res) => {
+    void handler(req, res);
+  };
+}
+
+const ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60;
+
 export function createAuthRouter(config: AuthRouterConfig) {
-  // Lazy-import Express to avoid hard dependency at module load time
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Router } = require('express') as typeof import('express');
   const router: Router = Router();
 
   const { services, jwtAccessSecret, jwtRefreshSecret, hmacSecret, appBaseUrl = '' } = config;
 
   // POST /auth/register
-  router.post('/register', async (req: Request, res: Response) => {
+  router.post('/register', runRoute(async (req: Request, res: Response) => {
     const result = safeValidate(registerSchema, req.body as unknown);
     if (!result.success) {
       res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: result.errors } });
       return;
     }
 
-    const { email, password, name } = result.data;
+    const { email, password, displayName } = result.data;
 
     try {
       const existing = await services.findUserByEmail(email);
       if (existing) throw Errors.emailAlreadyExists();
 
       const passwordHash = await hashPassword(password);
-      const user = await services.createUser({ email, name, passwordHash });
+      const user = await services.createUser({
+        email,
+        passwordHash,
+        ...(displayName ? { name: displayName } : {}),
+      });
 
       const { accessToken, refreshToken } = createTokenPair(
         { sub: user.id, email: user.email, role: user.role },
@@ -132,15 +143,15 @@ export function createAuthRouter(config: AuthRouterConfig) {
         user,
         accessToken,
         refreshToken,
-        expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_EXPIRY_SECONDS,
+        expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
       }, 201);
     } catch (err) {
       sendError(res, err);
     }
-  });
+  }));
 
   // POST /auth/login
-  router.post('/login', async (req: Request, res: Response) => {
+  router.post('/login', runRoute(async (req: Request, res: Response) => {
     const result = safeValidate(loginSchema, req.body as unknown);
     if (!result.success) {
       res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: result.errors } });
@@ -153,8 +164,8 @@ export function createAuthRouter(config: AuthRouterConfig) {
       const user = await services.findUserByEmail(email);
       if (!user) throw Errors.invalidCredentials();
 
-      const passwordHash = (user as User & { passwordHash?: string }).passwordHash;
-      if (!passwordHash) throw Errors.invalidCredentials();
+      const passwordHash: unknown = Reflect.get(user, 'passwordHash');
+      if (typeof passwordHash !== 'string') throw Errors.invalidCredentials();
 
       const valid = await verifyPassword(password, passwordHash);
       if (!valid) throw Errors.invalidCredentials();
@@ -172,24 +183,24 @@ export function createAuthRouter(config: AuthRouterConfig) {
         user,
         accessToken,
         refreshToken,
-        expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_EXPIRY_SECONDS,
+        expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
       });
     } catch (err) {
       sendError(res, err, 401);
     }
-  });
+  }));
 
   // POST /auth/logout
-  router.post('/logout', async (req: Request, res: Response) => {
+  router.post('/logout', runRoute(async (req: Request, res: Response) => {
     const { refreshToken } = req.body as { refreshToken?: string };
     if (refreshToken) {
       await services.revokeRefreshToken(refreshToken).catch(() => { /* best-effort */ });
     }
     sendSuccess(res, { message: 'Logged out' });
-  });
+  }));
 
   // POST /auth/refresh
-  router.post('/refresh', async (req: Request, res: Response) => {
+  router.post('/refresh', runRoute(async (req: Request, res: Response) => {
     const { refreshToken } = req.body as { refreshToken?: string };
     if (!refreshToken) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Refresh token required' } });
@@ -200,7 +211,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
       const userId = await services.validateRefreshToken(refreshToken);
       if (!userId) throw Errors.tokenExpired();
 
-      const payload = verifyJWT(refreshToken, jwtRefreshSecret) as JWTPayload;
+      const payload = verifyJWT(refreshToken, jwtRefreshSecret);
       const user = await services.findUserByEmail(payload.email);
       if (!user) throw Errors.invalidCredentials();
 
@@ -219,15 +230,15 @@ export function createAuthRouter(config: AuthRouterConfig) {
         user,
         accessToken,
         refreshToken: newRefreshToken,
-        expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_EXPIRY_SECONDS,
+        expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
       });
     } catch (err) {
       sendError(res, err, 401);
     }
-  });
+  }));
 
   // POST /auth/email/send-verification
-  router.post('/email/send-verification', async (req: Request, res: Response) => {
+  router.post('/email/send-verification', runRoute(async (req: Request, res: Response) => {
     const { userId, email } = req.body as { userId?: string; email?: string };
     if (!userId || !email) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'userId and email required' } });
@@ -245,10 +256,10 @@ export function createAuthRouter(config: AuthRouterConfig) {
     } catch (err) {
       sendError(res, err);
     }
-  });
+  }));
 
   // POST /auth/email/verify
-  router.post('/email/verify', async (req: Request, res: Response) => {
+  router.post('/email/verify', runRoute(async (req: Request, res: Response) => {
     const { token } = req.body as { token?: string };
     if (!token) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Token required' } });
@@ -257,15 +268,16 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
     try {
       const result = verifyEmailVerificationToken(token, hmacSecret);
-      await services.updateUser(result.userId, { isEmailVerified: true } as any);
+      if (!result.valid || !result.userId) throw Errors.tokenInvalid(result.reason);
+      await services.updateUser(result.userId, { emailVerified: true });
       sendSuccess(res, { message: 'Email verified successfully' });
     } catch (err) {
       sendError(res, err, 400);
     }
-  });
+  }));
 
   // POST /auth/magic-link
-  router.post('/magic-link', async (req: Request, res: Response) => {
+  router.post('/magic-link', runRoute(async (req: Request, res: Response) => {
     const { email } = req.body as { email?: string };
     if (!email) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Email required' } });
@@ -276,7 +288,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
       // Always respond with success to prevent email enumeration
       const user = await services.findUserByEmail(email);
       if (user && services.sendMagicLink) {
-        const { token } = generateMagicLinkToken(email, hmacSecret);
+        const { token } = generateMagicLinkToken(email, { secret: hmacSecret });
         const url = `${appBaseUrl}/auth/magic-link/verify?token=${token}`;
         await services.sendMagicLink(email, token, url);
       }
@@ -284,10 +296,10 @@ export function createAuthRouter(config: AuthRouterConfig) {
     } catch (err) {
       sendError(res, err);
     }
-  });
+  }));
 
   // POST /auth/magic-link/verify
-  router.post('/magic-link/verify', async (req: Request, res: Response) => {
+  router.post('/magic-link/verify', runRoute(async (req: Request, res: Response) => {
     const { token } = req.body as { token?: string };
     if (!token) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Token required' } });
@@ -295,7 +307,9 @@ export function createAuthRouter(config: AuthRouterConfig) {
     }
 
     try {
-      const { email } = verifyMagicLinkToken(token, hmacSecret);
+      const result = verifyMagicLinkToken(token, hmacSecret);
+      if (!result.valid || !result.email) throw Errors.tokenInvalid(result.reason);
+      const { email } = result;
       const user = await services.findUserByEmail(email);
       if (!user) throw Errors.invalidCredentials();
 
@@ -308,14 +322,14 @@ export function createAuthRouter(config: AuthRouterConfig) {
       const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       await services.storeRefreshToken(user.id, refreshToken, refreshExpiresAt);
 
-      sendSuccess(res, { user, accessToken, refreshToken, expiresIn: AUTH_CONSTANTS.ACCESS_TOKEN_EXPIRY_SECONDS });
+      sendSuccess(res, { user, accessToken, refreshToken, expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS });
     } catch (err) {
       sendError(res, err, 401);
     }
-  });
+  }));
 
   // POST /auth/password/reset
-  router.post('/password/reset', async (req: Request, res: Response) => {
+  router.post('/password/reset', runRoute(async (req: Request, res: Response) => {
     const { email } = req.body as { email?: string };
     if (!email) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Email required' } });
@@ -325,7 +339,10 @@ export function createAuthRouter(config: AuthRouterConfig) {
     try {
       const user = await services.findUserByEmail(email);
       if (user && services.sendPasswordResetEmail) {
-        const { token } = generateMagicLinkToken(email, hmacSecret, { expiresInMs: 3600_000 });
+        const { token } = generateMagicLinkToken(email, {
+          secret: hmacSecret,
+          expiresIn: 3600_000,
+        });
         const url = `${appBaseUrl}/auth/password/reset/confirm?token=${token}`;
         await services.sendPasswordResetEmail(user, token, url);
       }
@@ -334,10 +351,10 @@ export function createAuthRouter(config: AuthRouterConfig) {
     } catch (err) {
       sendError(res, err);
     }
-  });
+  }));
 
   // POST /auth/password/reset/confirm
-  router.post('/password/reset/confirm', async (req: Request, res: Response) => {
+  router.post('/password/reset/confirm', runRoute(async (req: Request, res: Response) => {
     const { token, newPassword } = req.body as { token?: string; newPassword?: string };
     if (!token || !newPassword) {
       res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Token and new password required' } });
@@ -345,18 +362,20 @@ export function createAuthRouter(config: AuthRouterConfig) {
     }
 
     try {
-      const { email } = verifyMagicLinkToken(token, hmacSecret);
+      const result = verifyMagicLinkToken(token, hmacSecret);
+      if (!result.valid || !result.email) throw Errors.tokenInvalid(result.reason);
+      const { email } = result;
       const user = await services.findUserByEmail(email);
       if (!user) throw Errors.invalidCredentials();
 
       const passwordHash = await hashPassword(newPassword);
-      await services.updateUser(user.id, { passwordHash } as any);
+      await services.updateUser(user.id, { passwordHash });
 
       sendSuccess(res, { message: 'Password reset successfully' });
     } catch (err) {
       sendError(res, err, 400);
     }
-  });
+  }));
 
   return router;
 }

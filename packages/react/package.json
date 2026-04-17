@@ -20,7 +20,7 @@
     "dev": "tsc --project tsconfig.build.json --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {

@@ -2,10 +2,17 @@
  * Minimal shared UI primitives — Tailwind-based, dark mode aware.
  * All props pass through className for full override capability.
  */
-import React from 'react';
+import { forwardRef } from 'react';
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
 
 // ----- Card (form wrapper) -----
-export function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Card({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string | undefined;
+}) {
   return (
     <div
       className={[
@@ -22,7 +29,7 @@ export function Card({ children, className }: { children: React.ReactNode; class
 }
 
 // ----- Heading -----
-export function Heading({ children }: { children: React.ReactNode }) {
+export function Heading({ children }: { children: ReactNode }) {
   return (
     <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-1">
       {children}
@@ -30,7 +37,7 @@ export function Heading({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Subheading({ children }: { children: React.ReactNode }) {
+export function Subheading({ children }: { children: ReactNode }) {
   return (
     <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">
       {children}
@@ -56,7 +63,13 @@ export function SuccessAlert({ message }: { message: string }) {
 }
 
 // ----- Label -----
-export function Label({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+export function Label({
+  htmlFor,
+  children,
+}: {
+  htmlFor?: string | undefined;
+  children: ReactNode;
+}) {
   return (
     <label
       htmlFor={htmlFor}
@@ -68,10 +81,10 @@ export function Label({ htmlFor, children }: { htmlFor?: string; children: React
 }
 
 // ----- Input -----
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, error, ...props }, ref) => (
     <div>
       <input
@@ -97,7 +110,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = 'Input';
 
 // ----- Button -----
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
   loading?: boolean;
 }
@@ -134,7 +147,7 @@ export function Spinner() {
 }
 
 // ----- TextButton (link-style) -----
-export function TextButton({ children, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function TextButton({ children, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
@@ -166,7 +179,7 @@ interface FieldProps {
   label: string;
   id?: string;
   error?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 export function Field({ label, id, error, children }: FieldProps) {
   return (

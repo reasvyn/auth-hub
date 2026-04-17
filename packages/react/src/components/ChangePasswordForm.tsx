@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFormState } from '../hooks/useUser';
-import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
-import { Card, Heading, ErrorAlert, SuccessAlert, Field, Input, Button } from './ui';
 import type { ChangePasswordFormProps } from '../types';
 
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { Card, Heading, ErrorAlert, Field, Input, Button } from './ui';
+
 export function ChangePasswordForm({ onSuccess, onError, className }: ChangePasswordFormProps) {
-  const { changePassword } = useAuth();
+  const auth = useAuth();
   const { values, handleChange, submitting, setSubmitting } = useFormState({
     currentPassword: '',
     newPassword: '',
@@ -26,7 +28,7 @@ export function ChangePasswordForm({ onSuccess, onError, className }: ChangePass
 
     setSubmitting(true);
     try {
-      await changePassword(values.currentPassword, values.newPassword);
+      await auth.changePassword(values.currentPassword, values.newPassword);
       setSuccess(true);
       onSuccess?.();
     } catch (err) {
@@ -57,7 +59,12 @@ export function ChangePasswordForm({ onSuccess, onError, className }: ChangePass
       <div className="flex flex-col gap-4 mt-4">
         {error && <ErrorAlert message={error} />}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           <Field label="Current password" id="cp-current">
             <Input
               id="cp-current"

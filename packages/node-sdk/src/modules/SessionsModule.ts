@@ -1,4 +1,5 @@
-import type { Session, ActiveSession } from '@reasvyn/auth-types';
+import type { ActiveSession } from '@reasvyn/auth-types';
+
 import type { HttpClient } from '../http/HttpClient';
 
 export class SessionsModule {

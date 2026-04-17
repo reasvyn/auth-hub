@@ -1,7 +1,8 @@
-import React from 'react';
-import type { OAuthButtonProps } from '../types';
 import type { OAuthProvider } from '@reasvyn/auth-types';
+import type { ReactNode } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
+import type { OAuthButtonProps } from '../types';
 
 const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   google: 'Google',
@@ -13,7 +14,7 @@ const PROVIDER_LABELS: Record<OAuthProvider, string> = {
 };
 
 // SVG icons per provider (minimal, single-color)
-const PROVIDER_ICONS: Record<OAuthProvider, React.ReactNode> = {
+const PROVIDER_ICONS: Record<OAuthProvider, ReactNode> = {
   google: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -50,18 +51,20 @@ const PROVIDER_ICONS: Record<OAuthProvider, React.ReactNode> = {
 };
 
 export function OAuthButton({ provider, onClick, className, label }: OAuthButtonProps) {
-  const { loginWithOAuth } = useAuth();
+  const auth = useAuth();
   const displayLabel = label ?? `Continue with ${PROVIDER_LABELS[provider]}`;
 
   const handleClick = async () => {
     onClick?.();
-    await loginWithOAuth(provider);
+    await auth.loginWithOAuth(provider);
   };
 
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={() => {
+        void handleClick();
+      }}
       className={[
         'flex items-center justify-center gap-2 w-full px-4 py-2.5',
         'rounded-lg border border-gray-300 dark:border-gray-600',

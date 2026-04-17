@@ -33,7 +33,7 @@ export class BruteForceProtection {
     // Reset if lockout expired
     if (record.lockedUntil && now > record.lockedUntil) {
       record.attempts = 0;
-      record.lockedUntil = undefined;
+      delete record.lockedUntil;
     }
 
     record.attempts += 1;
@@ -49,7 +49,7 @@ export class BruteForceProtection {
     return {
       locked: record.attempts >= this.maxAttempts,
       attemptsRemaining,
-      lockedUntil: record.lockedUntil ? new Date(record.lockedUntil) : undefined,
+      ...(record.lockedUntil ? { lockedUntil: new Date(record.lockedUntil) } : {}),
     };
   }
 
@@ -63,7 +63,7 @@ export class BruteForceProtection {
     if (!record?.lockedUntil) return { locked: false };
     if (now > record.lockedUntil) {
       record.attempts = 0;
-      record.lockedUntil = undefined;
+      delete record.lockedUntil;
       return { locked: false };
     }
 

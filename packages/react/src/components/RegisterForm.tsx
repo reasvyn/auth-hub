@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
+
 import { useAuth } from '../hooks/useAuth';
 import { useFormState } from '../hooks/useUser';
+import type { RegisterFormProps } from '../types';
+
 import { OAuthButton } from './OAuthButton';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, Divider } from './ui';
-import type { RegisterFormProps } from '../types';
 
 export function RegisterForm({ onSuccess, onError, providers = [], className }: RegisterFormProps) {
-  const { register, status, error, clearError } = useAuth();
+  const auth = useAuth();
   const { values, handleChange, submitting, setSubmitting } = useFormState({
-    name: '',
+    displayName: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-  const [localError, setLocalError] = React.useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    auth.clearError();
     setLocalError(null);
 
     if (values.password !== values.confirmPassword) {
@@ -28,8 +30,12 @@ export function RegisterForm({ onSuccess, onError, providers = [], className }: 
 
     setSubmitting(true);
     try {
-      await register({ name: values.name, email: values.email, password: values.password });
-      onSuccess?.({ user: null as any, accessToken: '', refreshToken: '' });
+      await auth.register({
+        displayName: values.displayName,
+        email: values.email,
+        password: values.password,
+      });
+      onSuccess?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       onError?.(msg);
@@ -38,7 +44,7 @@ export function RegisterForm({ onSuccess, onError, providers = [], className }: 
     }
   };
 
-  const displayError = localError ?? error;
+  const displayError = localError ?? auth.error;
 
   return (
     <Card className={className}>
@@ -48,13 +54,18 @@ export function RegisterForm({ onSuccess, onError, providers = [], className }: 
       <div className="flex flex-col gap-4">
         {displayError && <ErrorAlert message={displayError} />}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           <Field label="Full name" id="reg-name">
             <Input
               id="reg-name"
               type="text"
-              value={values.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              value={values.displayName}
+              onChange={(e) => handleChange('displayName', e.target.value)}
               placeholder="Jane Doe"
               autoComplete="name"
             />
@@ -97,7 +108,7 @@ export function RegisterForm({ onSuccess, onError, providers = [], className }: 
             />
           </Field>
 
-          <Button type="submit" loading={submitting || status === 'loading'}>
+          <Button type="submit" loading={submitting || auth.status === 'loading'}>
             Create account
           </Button>
         </form>

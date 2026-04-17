@@ -1,10 +1,13 @@
+import type { ActiveSession } from '@reasvyn/auth-types';
 import { useCallback, useEffect, useState } from 'react';
-import type { Session } from '@reasvyn/auth-types';
-import { useAuth } from './useAuth';
+
 import type { AuthAdapter } from '../types';
 
+import { useAuth } from './useAuth';
+
+
 interface UseSessionReturn {
-  sessions: Session[];
+  sessions: ActiveSession[];
   loading: boolean;
   error: string | null;
   refresh(): Promise<void>;
@@ -14,7 +17,7 @@ interface UseSessionReturn {
 
 export function useSession(adapter: AuthAdapter): UseSessionReturn {
   const { status } = useAuth();
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

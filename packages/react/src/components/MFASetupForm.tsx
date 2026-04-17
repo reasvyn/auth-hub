@@ -1,18 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { useMFA } from '../hooks/useMFA';
-import { Card, Heading, Subheading, ErrorAlert, SuccessAlert, Field, Input, Button, TextButton } from './ui';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+
 import type { MFASetupFormProps } from '../types';
 
-export function MFASetupForm({ method, onSuccess, onError, onCancel, className }: MFASetupFormProps) {
-  const mfa = useMFA({ setupMFA: async (m) => { throw new Error('adapter not provided directly'); } } as any);
+import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton } from './ui';
 
-  // MFASetupForm expects adapter to be injected — in practice, use the hook inside your page
-  // and pass setupData as props, or compose with useMFA directly.
-  // This component is a controlled UI shell.
+export function MFASetupForm({
+  method,
+  setupData,
+  onVerify,
+  onSuccess,
+  onError,
+  onCancel,
+  className,
+}: MFASetupFormProps) {
   const [code, setCode] = useState('');
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const methodLabel =
+    method === 'totp' ? 'Authenticator App' : method === 'sms' ? 'SMS' : 'Email';
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = onVerify ? await onVerify(code) : undefined;
+      onSuccess?.(result ?? setupData ?? undefined);
+      setVerified(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Verification failed';
+      setError(msg);
+      onError?.(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (verified) {
     return (
@@ -26,7 +51,7 @@ export function MFASetupForm({ method, onSuccess, onError, onCancel, className }
 
   return (
     <Card className={className}>
-      <Heading>Set up {method === 'totp' ? 'Authenticator App' : method === 'sms' ? 'SMS' : 'Email'} 2FA</Heading>
+      <Heading>Set up {methodLabel} 2FA</Heading>
       <Subheading>
         {method === 'totp'
           ? 'Scan the QR code with your authenticator app, then enter the 6-digit code.'
@@ -37,26 +62,21 @@ export function MFASetupForm({ method, onSuccess, onError, onCancel, className }
         {error && <ErrorAlert message={error} />}
 
         {/* QR Code placeholder — actual data comes from useMFA().setupData */}
-        <div className="flex items-center justify-center w-full aspect-square max-w-[180px] mx-auto rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 text-sm">
-          QR code here
-        </div>
+        {setupData?.qrCodeUrl ? (
+          <img
+            src={setupData.qrCodeUrl}
+            alt={`${methodLabel} QR code`}
+            className="mx-auto w-full max-w-[180px] rounded-xl border border-gray-200 dark:border-gray-700"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full aspect-square max-w-[180px] mx-auto rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 text-sm">
+            QR code here
+          </div>
+        )}
 
         <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setError(null);
-            setSubmitting(true);
-            try {
-              // Verification is done by parent via useMFA
-              onSuccess?.({} as any);
-              setVerified(true);
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : 'Verification failed';
-              setError(msg);
-              onError?.(msg);
-            } finally {
-              setSubmitting(false);
-            }
+          onSubmit={(e) => {
+            void handleSubmit(e);
           }}
           className="flex flex-col gap-4"
         >

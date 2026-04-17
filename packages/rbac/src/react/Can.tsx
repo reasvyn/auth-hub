@@ -1,6 +1,8 @@
 import type React from 'react';
-import { usePermissions } from './usePermissions';
+
 import type { Permission } from '../types';
+
+import { usePermissions } from './usePermissions';
 
 export interface CanProps {
   /** Permission required to render children */
@@ -27,15 +29,15 @@ export interface CanProps {
  * </Can>
  */
 export function Can({ permission, anyOf, allOf, fallback = null, children }: CanProps): React.ReactNode {
-  const { can, canAny, canAll } = usePermissions();
+  const permissions = usePermissions();
 
   let granted = false;
   if (permission) {
-    granted = can(permission);
+    granted = permissions.can(permission);
   } else if (anyOf) {
-    granted = canAny(anyOf);
+    granted = permissions.canAny(anyOf);
   } else if (allOf) {
-    granted = canAll(allOf);
+    granted = permissions.canAll(allOf);
   }
 
   return granted ? children : fallback;

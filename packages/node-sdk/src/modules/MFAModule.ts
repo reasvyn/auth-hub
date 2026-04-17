@@ -1,4 +1,5 @@
 import type { MFASetupData, TwoFactorMethod } from '@reasvyn/auth-types';
+
 import type { HttpClient } from '../http/HttpClient';
 
 export interface BackupCodesResponse {

@@ -21,14 +21,16 @@ export class AuthHubError extends Error {
     this.name = 'AuthHubError';
     this.code = code;
     this.statusCode = statusCode;
-    this.details = details;
+    if (details) {
+      this.details = details;
+    }
   }
 
   toJSON(): AuthError {
     return {
       code: this.code,
       message: this.message,
-      details: this.details,
+      ...(this.details ? { details: this.details } : {}),
       statusCode: this.statusCode,
       timestamp: new Date(),
     };

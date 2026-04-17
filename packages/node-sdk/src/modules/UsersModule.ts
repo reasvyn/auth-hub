@@ -1,4 +1,5 @@
 import type { User, UserProfile, UserSettings } from '@reasvyn/auth-types';
+
 import type { HttpClient } from '../http/HttpClient';
 
 export class UsersModule {

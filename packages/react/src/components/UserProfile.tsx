@@ -1,15 +1,16 @@
-import React from 'react';
 import { useUser } from '../hooks/useUser';
-import { Card, Heading, Subheading, ErrorAlert, SuccessAlert, Button } from './ui';
 import type { UserProfileProps } from '../types';
 
+import { Card } from './ui';
+
 export function UserProfile({ className }: UserProfileProps) {
-  const { user, displayName, avatarUrl, isEmailVerified, isMFAEnabled } = useUser();
+  const userState = useUser();
+  const { user } = userState;
 
   if (!user) return null;
 
-  const avatar = avatarUrl();
-  const name = displayName();
+  const avatar = userState.avatarUrl();
+  const name = userState.displayName();
 
   return (
     <Card className={className}>
@@ -36,7 +37,7 @@ export function UserProfile({ className }: UserProfileProps) {
         <ProfileRow
           label="Email verification"
           value={
-            isEmailVerified() ? (
+            userState.isEmailVerified() ? (
               <Badge color="green">Verified</Badge>
             ) : (
               <Badge color="red">Not verified</Badge>
@@ -46,7 +47,7 @@ export function UserProfile({ className }: UserProfileProps) {
         <ProfileRow
           label="Two-factor auth"
           value={
-            isMFAEnabled() ? (
+            userState.isMFAEnabled() ? (
               <Badge color="green">Enabled</Badge>
             ) : (
               <Badge color="gray">Disabled</Badge>

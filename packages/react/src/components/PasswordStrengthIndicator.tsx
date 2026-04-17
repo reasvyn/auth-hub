@@ -1,5 +1,5 @@
-import React from 'react';
 import { validatePasswordStrength } from '@reasvyn/auth-core';
+
 import type { PasswordStrengthIndicatorProps } from '../types';
 
 const STRENGTH_LABELS = ['', 'Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'] as const;
@@ -25,7 +25,13 @@ const STRENGTH_TEXT_COLORS = [
 export function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndicatorProps) {
   if (!password) return null;
   const result = validatePasswordStrength(password);
-  const score = result.score; // 1-5
+  const score = {
+    very_weak: 1,
+    weak: 2,
+    fair: 3,
+    strong: 4,
+    very_strong: 5,
+  }[result.strength];
 
   return (
     <div className={['mt-2', className].filter(Boolean).join(' ')}>
@@ -45,9 +51,9 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
           {STRENGTH_LABELS[score]}
         </p>
       )}
-      {result.feedback.length > 0 && (
+      {result.errors.length > 0 && (
         <ul className="mt-1 text-xs text-gray-500 dark:text-gray-400 list-disc list-inside space-y-0.5">
-          {result.feedback.map((f, i) => (
+          {result.errors.map((f, i) => (
             <li key={i}>{f}</li>
           ))}
         </ul>

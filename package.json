@@ -24,6 +24,7 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-import-resolver-typescript": "3.6.1",
     "prettier": "^3.3.3",
     "turbo": "^2.3.3",
     "typescript": "^5.5.4"
@@ -32,6 +33,7 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
+  "packageManager": "npm@11.8.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/reasvyn/auth-hub.git"
