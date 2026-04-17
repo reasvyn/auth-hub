@@ -19,6 +19,8 @@ Auth-Hub provides everything you need to add authentication to your applications
 - 🚂 **Express adapter** — middleware + plug-and-play route handlers
 - ▲ **Next.js adapter** — Edge middleware, Server Component helpers, client adapter
 - 🎨 **TailwindCSS** with full light/dark mode support
+- 🔒 **RBAC** — role-based access control engine, `<Can>` component, Express middleware
+- 👥 **Team management** — multi-tenant workspaces, invitations, role hierarchy, ready-made React UI
 - 🔧 **Fully TypeScript** — strict types throughout, zero `any` in public API
 
 ## Architecture
@@ -30,6 +32,8 @@ auth-hub/
 │   ├── core/          # Core auth logic — framework-agnostic (@reasvyn/auth-core)
 │   ├── react/         # React components & hooks             (@reasvyn/auth-react)
 │   ├── node-sdk/      # HTTP client SDK                      (@reasvyn/auth-node-sdk)
+│   ├── rbac/          # Role-Based Access Control engine     (@reasvyn/auth-rbac)
+│   ├── team/          # Team management & invitations        (@reasvyn/auth-team)
 │   └── adapters/
 │       ├── express/   # Express.js middleware & router       (@reasvyn/auth-express)
 │       └── nextjs/    # Next.js App Router + Edge support    (@reasvyn/auth-nextjs)
@@ -50,6 +54,8 @@ auth-hub/
 | [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | HTTP client SDK | 0.0.1 |
 | [`@reasvyn/auth-express`](./packages/adapters/express) | Express.js middleware & route handlers | 0.0.1 |
 | [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs) | Next.js App Router, Edge Middleware & server helpers | 0.0.1 |
+| [`@reasvyn/auth-rbac`](./packages/rbac) | Role-Based Access Control engine, `<Can>` component, Express middleware | 0.0.1 |
+| [`@reasvyn/auth-team`](./packages/team) | Team management, invitations, role hierarchy, React UI | 0.0.1 |
 
 ## Installation
 
