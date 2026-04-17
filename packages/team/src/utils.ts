@@ -114,8 +114,12 @@ export function canChangeRole(
   return outranks(actorRole, currentRole) && outranks(actorRole, newRole);
 }
 
-/** Determine if an actor can remove a member. Actor must outrank the target. */
+/**
+ * Determine if an actor can remove a member.
+ * Only owners and admins can remove members; owners cannot remove other owners.
+ */
 export function canRemoveMember(actorRole: TeamRole, targetRole: TeamRole): boolean {
-  if (actorRole === 'owner') return targetRole !== 'owner'; // cannot remove another owner
-  return outranks(actorRole, targetRole);
+  if (actorRole === 'owner') return targetRole !== 'owner';
+  if (actorRole === 'admin') return outranks('admin', targetRole); // admin > member, viewer
+  return false; // member and viewer cannot remove anyone
 }
