@@ -1,133 +1,174 @@
 # @reasvyn/auth-core
 
-Core authentication logic for Auth-Hub — framework-agnostic. Provides the building blocks for authentication: password hashing, JWT management, TOTP 2FA, rate limiting, CSRF protection, and more.
+Framework-agnostic authentication primitives for Auth-TS.
 
-## Installation
+## Overview
+
+`@reasvyn/auth-core` contains the reusable low-level building blocks for implementing authentication and security flows. It is intended for server-side use, adapters, custom backends, and infrastructure code that needs password hashing, token generation, validation, MFA helpers, and structured error handling.
+
+The package does not depend on a web framework. Instead, higher-level packages such as `@reasvyn/auth-express` and `@reasvyn/auth-nextjs` compose these primitives into framework-specific integrations.
+
+## Key Features
+
+- Password hashing and verification
+- JWT creation, verification, and token-pair generation
+- Magic link and email verification token utilities
+- MFA/TOTP generation and verification
+- Validation helpers and structured runtime errors
+- OAuth URL helpers
+- In-memory rate limiting and brute-force protection
+- CSRF utilities
+- Lightweight logging helpers
+
+## Minimum Requirements
+
+### Runtime Requirements
+
+- Node.js >= 18.0.0
+
+### Tech Stack
+
+- TypeScript 5.x
+- `bcryptjs` for password hashing
+- `jsonwebtoken` for JWT signing and verification
+- `zod` for validation
+- `speakeasy` and `qrcode` for TOTP setup flows
+- `uuid` for token and identifier utilities
+
+## Quick Start
+
+### 1. Install
 
 ```bash
 npm install @reasvyn/auth-core
 ```
 
-## Features
+### 2. Hash Passwords and Create Tokens
 
-- 🔐 **Password hashing** (bcrypt) with strength validation
-- 🎫 **JWT creation & verification** with token pair support
-- 🔗 **Magic link** generation & validation
-- 📧 **Email verification** token utilities
-- 🌐 **OAuth2** authorization URL generation
-- 🛡️ **CSRF** token generation & validation
-- 📱 **TOTP/2FA** utilities via speakeasy
-- 🚫 **Rate limiting** (in-memory)
-- 🔒 **Brute force protection**
-- ✅ **Validation** helpers (zod-based)
-- 📝 **Logging** utilities
+```ts
+import {
+  hashPassword,
+  verifyPassword,
+  createTokenPair,
+} from '@reasvyn/auth-core';
 
-## Usage
+const passwordHash = await hashPassword('StrongPassword123!');
+const isValid = await verifyPassword('StrongPassword123!', passwordHash);
 
-### Password Utilities
-
-```typescript
-import { hashPassword, verifyPassword, validatePasswordStrength } from '@reasvyn/auth-core';
-
-// Hash a password
-const hash = await hashPassword('myPassword123!');
-
-// Verify
-const isValid = await verifyPassword('myPassword123!', hash);
-
-// Check strength
-const { isValid, errors, strength } = validatePasswordStrength('weak');
-```
-
-### JWT Tokens
-
-```typescript
-import { createJWT, verifyJWT, createTokenPair } from '@reasvyn/auth-core';
-
-// Create access token
-const token = createJWT(
-  { sub: 'user123', email: 'user@example.com', role: 'user' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '15m' }
-);
-
-// Verify
-const payload = verifyJWT(token, process.env.JWT_SECRET!);
-
-// Create token pair (access + refresh)
 const { accessToken, refreshToken } = createTokenPair(
-  { sub: 'user123', email: 'user@example.com', role: 'user' },
+  { sub: 'user_1', email: 'user@example.com', role: 'user' },
   process.env.JWT_ACCESS_SECRET!,
   process.env.JWT_REFRESH_SECRET!,
 );
 ```
 
-### Magic Links
+### 3. Generate a Magic Link
 
-```typescript
+```ts
 import { generateMagicLinkToken, verifyMagicLinkToken } from '@reasvyn/auth-core';
 
 const { token, url } = generateMagicLinkToken('user@example.com', {
-  secret: process.env.MAGIC_LINK_SECRET!,
-  baseUrl: 'https://myapp.com/auth/magic',
-  expiresIn: 15 * 60 * 1000,
+  secret: process.env.HMAC_SECRET!,
+  baseUrl: 'https://myapp.com/auth/magic-link/verify',
 });
 
-// Later, verify:
-const result = verifyMagicLinkToken(token, process.env.MAGIC_LINK_SECRET!);
+const result = verifyMagicLinkToken(token, process.env.HMAC_SECRET!);
 if (result.valid) {
-  console.log('Verified for:', result.email);
+  console.log(result.email);
 }
 ```
 
-### TOTP / 2FA
+## Technical Reference
 
-```typescript
-import { generateTOTPSecret, verifyTOTPCode } from '@reasvyn/auth-core';
+### Exported Modules
 
-// Setup
-const setup = await generateTOTPSecret({
-  issuer: 'MyApp',
-  accountName: 'user@example.com',
-});
-// setup.secret, setup.qrCodeUrl, setup.backupCodes
+`@reasvyn/auth-core` re-exports functionality from:
 
-// Verify user's code
-const isValid = verifyTOTPCode('123456', setup.secret);
+- `auth/jwt`
+- `auth/magic-link`
+- `auth/email-verification`
+- `auth/oauth`
+- `security/password`
+- `security/rate-limiter`
+- `security/csrf`
+- `security/totp`
+- `security/brute-force`
+- `utils/errors`
+- `utils/validation`
+- `utils/logger`
+- `utils/constants`
+
+### Structured Runtime Errors
+
+The runtime error class exported by this package is:
+
+```ts
+import { AuthError, Errors, isAuthError } from '@reasvyn/auth-core';
 ```
 
-### Rate Limiting
+- `AuthError` is the runtime `Error` subclass
+- `Errors` is the convenience factory collection
+- `isAuthError()` is the type guard for caught errors
 
-```typescript
-import { RateLimiter } from '@reasvyn/auth-core';
-
-const limiter = new RateLimiter({ maxRequests: 5, windowMs: 15 * 60 * 1000 });
-
-const { allowed, info } = limiter.check('user-ip-or-email');
-if (!allowed) {
-  throw new Error(`Rate limit exceeded. Retry after ${info.retryAfter}s`);
-}
-```
-
-### Error Handling
-
-```typescript
-import { Errors, isAuthHubError } from '@reasvyn/auth-core';
-
+```ts
 try {
-  // ...
+  throw Errors.invalidCredentials();
 } catch (error) {
-  if (isAuthHubError(error)) {
-    console.log(error.code, error.statusCode);
+  if (isAuthError(error)) {
+    console.error(error.code, error.statusCode, error.message);
   }
 }
-
-// Create specific errors
-throw Errors.invalidCredentials();
-throw Errors.rateLimitExceeded(30);
-throw Errors.mfaRequired('mfa-session-token');
 ```
+
+### Password Utilities
+
+Typical password flow:
+
+```ts
+import {
+  hashPassword,
+  verifyPassword,
+  validatePasswordStrength,
+} from '@reasvyn/auth-core';
+
+const strength = validatePasswordStrength('StrongPassword123!');
+if (!strength.isValid) {
+  throw new Error(strength.errors.join(', '));
+}
+```
+
+### JWT Utilities
+
+The JWT helpers expect a `JWTPayload`-compatible input:
+
+```ts
+import { createJWT, verifyJWT } from '@reasvyn/auth-core';
+
+const token = createJWT(
+  { sub: 'user_1', email: 'user@example.com', role: 'admin' },
+  process.env.JWT_ACCESS_SECRET!,
+  { expiresIn: '15m' },
+);
+
+const payload = verifyJWT(token, process.env.JWT_ACCESS_SECRET!);
+```
+
+### TOTP Utilities
+
+`generateTOTPSecret()` returns setup data suitable for enrollment screens, while `verifyTOTPCode()` validates user input during setup or login.
+
+### Validation Helpers
+
+The package exports schema helpers such as `loginSchema`, `registerSchema`, and `safeValidate()` to support adapters without duplicating validation logic.
 
 ## License
 
 MIT
+
+## Contributing
+
+Changes to this package should follow the root [CONTRIBUTING.md](../../CONTRIBUTING.md), especially because API changes here usually cascade into adapters and SDKs.
+
+## Security
+
+This package is security-sensitive by design. For vulnerability reports or concerns, use the root [SECURITY.md](../../SECURITY.md) or contact [reasvyn@gmail.com](mailto:reasvyn@gmail.com).

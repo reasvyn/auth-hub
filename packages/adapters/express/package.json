@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-express",
   "version": "0.1.0",
-  "description": "Express.js middleware and route handlers for Auth-Hub",
+  "description": "Express.js middleware and route handlers for Auth-TS",
   "keywords": ["auth", "authentication", "express", "middleware", "typescript"],
   "license": "MIT",
   "main": "./dist/index.js",

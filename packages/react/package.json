@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-react",
   "version": "0.1.0",
-  "description": "React components and hooks for Auth-Hub",
+  "description": "React components and hooks for Auth-TS",
   "keywords": ["auth", "authentication", "react", "hooks", "typescript"],
   "license": "MIT",
   "main": "./dist/index.js",

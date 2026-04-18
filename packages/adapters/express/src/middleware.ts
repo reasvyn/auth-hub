@@ -1,4 +1,4 @@
-import { isAuthHubError, verifyJWT } from '@reasvyn/auth-core';
+import { isAuthError, verifyJWT } from '@reasvyn/auth-core';
 import type { JWTPayload } from '@reasvyn/auth-types';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
@@ -49,7 +49,7 @@ export function requireAuth(options: AuthMiddlewareOptions): RequestHandler {
       req.auth = { ...payload, token };
       next();
     } catch (err) {
-      const message = isAuthHubError(err) ? err.message : 'Invalid or expired token';
+      const message = isAuthError(err) ? err.message : 'Invalid or expired token';
       if (options.onUnauthorized) {
         options.onUnauthorized(req, res, message);
         return;

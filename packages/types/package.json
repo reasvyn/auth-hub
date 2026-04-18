@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-types",
   "version": "0.1.0",
-  "description": "Shared TypeScript type definitions for Auth-Hub",
+  "description": "Shared TypeScript type definitions for Auth-TS",
   "keywords": ["auth", "typescript", "types"],
   "license": "MIT",
   "main": "./dist/index.js",

@@ -1,201 +1,144 @@
 # @reasvyn/auth-rbac
 
-> Role-Based Access Control (RBAC) engine for auth-hub — pure TypeScript, zero runtime dependencies.
+Role-based access control engine for Auth-TS.
 
-## Features
+## Overview
 
-- ✅ Fluent role builder (`defineRoles()`)
-- ✅ Wildcard permissions (`"*"`, `"resource:*"`)
-- ✅ Recursive role inheritance with cycle detection
-- ✅ Pre-computed permission cache for O(1) checks
-- ✅ React `<Can>` component + `usePermissions()` hook
-- ✅ Express middleware (`requirePermission`)
-- ✅ Ready-made presets for common SaaS patterns
+`@reasvyn/auth-rbac` provides a framework-agnostic RBAC engine plus optional React and Express bindings exposed through subpath exports.
 
-## Installation
+Use the root package for permission modeling and evaluation, then compose:
 
-```bash
-pnpm add @reasvyn/auth-rbac
-```
+- `@reasvyn/auth-rbac/react` for React UI access control
+- `@reasvyn/auth-rbac/middleware` for Express authorization middleware
+
+## Key Features
+
+- Built-in role presets such as `defaultRoles` and `saasRoles`
+- Fluent role builder with `defineRoles()`
+- React provider and `<Can>` component
+- Express middleware for permission-based route protection
+- Wildcard permission matching
+- Role inheritance with cycle-safe resolution
+- Permission cache for repeated checks
+
+## Minimum Requirements
+
+### Runtime Requirements
+
+- TypeScript-aware environment
+- React >= 18.0.0 for `/react`
+- Express >= 4.0.0 for `/middleware`
+
+### Tech Stack
+
+- TypeScript 5.x
+- Zero runtime dependencies in the core RBAC engine
+- Optional React and Express integrations via peer dependencies
 
 ## Quick Start
+
+### 1. Install
+
+```bash
+npm install @reasvyn/auth-rbac
+```
+
+### 2. Define Roles
 
 ```ts
 import { defineRoles } from '@reasvyn/auth-rbac';
 
-const engine = defineRoles()
-  .role('viewer',  { permissions: ['posts:read', 'comments:read'] })
-  .role('editor',  { permissions: ['posts:write', 'posts:delete'], extends: ['viewer'] })
-  .role('admin',   { permissions: ['users:manage'], extends: ['editor'] })
-  .role('owner',   { permissions: ['*'] })
+const rbac = defineRoles()
+  .role('viewer', { permissions: ['posts:read'] })
+  .role('editor', { permissions: ['posts:write'], extends: ['viewer'] })
+  .role('admin', { permissions: ['users:manage'], extends: ['editor'] })
   .build();
-
-engine.can('editor').do('posts:write');   // true
-engine.can('viewer').do('posts:delete'); // false
-engine.can('owner').do('anything:ever'); // true — wildcard
 ```
 
-## API Reference
-
-### `defineRoles()`
-
-Returns a `RoleBuilder` fluent instance.
+### 3. Check Permissions
 
 ```ts
-const engine = defineRoles()
-  .role(name, definition)   // add a new role
-  .extend(name, extra)      // extend an existing role (merge permissions/extends)
-  .build();                 // returns RBACEngine
+rbac.can('editor').do('posts:write'); // true
+rbac.can('viewer').do('posts:write'); // false
+rbac.can('admin').doAny(['posts:write', 'billing:manage']); // true
 ```
 
-#### `RoleDefinition`
+### 4. Use React or Express Bindings
+
+```tsx
+import { RBACProvider, Can } from '@reasvyn/auth-rbac/react';
+
+<RBACProvider engine={rbac} role="admin">
+  <Can permission="users:manage">
+    <button>Manage users</button>
+  </Can>
+</RBACProvider>;
+```
 
 ```ts
-interface RoleDefinition {
-  /** Permission strings in "resource:action" format.
-   *  Use "*" for global admin, "resource:*" for all actions on a resource. */
-  permissions: string[];
-  /** Other role names this role inherits from */
-  extends?: string[];
-}
+import { requirePermission } from '@reasvyn/auth-rbac/middleware';
+
+app.delete(
+  '/api/posts/:id',
+  requirePermission({ rbac, permission: 'posts:delete' }),
+  handler,
+);
 ```
+
+## Technical Reference
+
+### Root Exports
+
+- `RBACEngine`
+- `defineRoles`
+- `RoleBuilder`
+- `defaultRoles`
+- `saasRoles`
+
+### Core Permission Model
+
+Permissions follow the `resource:action` convention:
+
+- `posts:read`
+- `posts:*`
+- `*`
 
 ### `RBACEngine`
 
-```ts
-engine.can(role: string).do(permission: string): boolean
-engine.can(role: string).doAny(permissions: string[]): boolean
-engine.can(role: string).doAll(permissions: string[]): boolean
-engine.can(role: string).check(permission: string): PermissionCheckResult
+Typical evaluation methods:
 
-interface PermissionCheckResult {
-  granted: boolean;
-  role: string;
-  permission: string;
-  /** Which inherited role granted the permission, if any */
-  grantedBy?: string;
-}
-```
+- `can(role).do(permission)`
+- `can(role).doAny(permissions)`
+- `can(role).doAll(permissions)`
+- `can(role).check(permission)`
 
-### Presets
+### React Subpath: `@reasvyn/auth-rbac/react`
 
-```ts
-import { defaultRoles, saasRoles } from '@reasvyn/auth-rbac';
+Exports:
 
-// defaultRoles: super_admin, admin, moderator, user, viewer
-defaultRoles.can('admin').do('users:manage'); // true
+- `RBACProvider`
+- `Can`
+- `usePermissions`
+- `RBACContext`
 
-// saasRoles: owner, admin, member, viewer
-saasRoles.can('owner').do('billing:manage'); // true
-```
+### Express Subpath: `@reasvyn/auth-rbac/middleware`
 
-## React Integration
+Exports:
 
-### `<RBACProvider>`
+- `requirePermission(options)`
+- `requireAnyPermission(options)`
+- `requireAllPermissions(options)`
 
-Wrap your app (after `AuthProvider`):
+All middleware helpers accept an initialized `RBACEngine` plus optional custom role extraction and forbidden handlers.
 
-```tsx
-import { RBACProvider, saasRoles } from '@reasvyn/auth-rbac/react';
-import { useAuth } from '@reasvyn/auth-react';
+## License
 
-function App() {
-  const { user } = useAuth();
-  return (
-    <RBACProvider engine={saasRoles} role={user?.role ?? 'viewer'}>
-      {children}
-    </RBACProvider>
-  );
-}
-```
+MIT
 
-### `usePermissions()`
+## Contributing
 
-```tsx
-import { usePermissions } from '@reasvyn/auth-rbac/react';
+Follow the root [CONTRIBUTING.md](../../CONTRIBUTING.md) when changing permission semantics, middleware behavior, or React bindings.
 
-function DeleteButton() {
-  const { can, canAny } = usePermissions();
+## Security
 
-  if (!can('posts:delete')) return null;
-  return <button>Delete</button>;
-}
-```
-
-### `<Can>`
-
-```tsx
-import { Can } from '@reasvyn/auth-rbac/react';
-
-// Single permission
-<Can permission="posts:write">
-  <button>Edit</button>
-</Can>
-
-// Any of these permissions
-<Can anyOf={['posts:write', 'posts:delete']} fallback={<p>No access</p>}>
-  <ManagePost />
-</Can>
-
-// All permissions required
-<Can allOf={['billing:read', 'billing:manage']}>
-  <BillingPanel />
-</Can>
-```
-
-#### `<Can>` Props
-
-| Prop | Type | Description |
-|---|---|---|
-| `permission` | `string` | Single permission to check |
-| `anyOf` | `string[]` | At least one must be granted |
-| `allOf` | `string[]` | All must be granted |
-| `fallback` | `ReactNode` | Render when access is denied |
-
-## Express Middleware
-
-```ts
-import { requirePermission, requireAnyPermission } from '@reasvyn/auth-rbac/middleware';
-
-// Reads req.auth.role — populated by @reasvyn/auth-express requireAuth()
-router.delete('/posts/:id',
-  requireAuth(),                          // sets req.auth.role
-  requirePermission(engine, 'posts:delete'),
-  deletePostHandler,
-);
-
-router.get('/admin',
-  requireAuth(),
-  requireAnyPermission(engine, ['admin:read', 'super_admin:read']),
-  adminHandler,
-);
-```
-
-### Available middleware
-
-| Function | Description |
-|---|---|
-| `requirePermission(engine, perm)` | User must have this permission |
-| `requireAnyPermission(engine, perms)` | User must have at least one |
-| `requireAllPermissions(engine, perms)` | User must have all |
-
-## Permission Format
-
-Permissions follow the `"resource:action"` convention:
-
-| Pattern | Matches |
-|---|---|
-| `"posts:read"` | Exact: read posts |
-| `"posts:*"` | All actions on posts |
-| `"*"` | Everything (super admin) |
-
-## Composing with auth-team
-
-```ts
-// Use team-scoped roles with RBAC
-const { currentRole } = useTeam();      // 'admin' | 'member' | ...
-const { can } = usePermissions();       // reads role from RBACProvider
-
-// In RBACProvider, supply currentRole from useTeam():
-<RBACProvider engine={saasRoles} role={currentRole ?? 'viewer'}>
-```
+Authorization mistakes are security-sensitive. Report concerns through the root [SECURITY.md](../../SECURITY.md) or contact [reasvyn@gmail.com](mailto:reasvyn@gmail.com).

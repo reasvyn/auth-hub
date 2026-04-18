@@ -1,7 +1,7 @@
 /**
  * @reasvyn/auth-rbac
  *
- * Role-Based Access Control engine for Auth-Hub.
+ * Role-Based Access Control engine for Auth-TS.
  * Framework-agnostic core — React and Express bindings in separate exports.
  */
 

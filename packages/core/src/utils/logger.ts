@@ -30,7 +30,7 @@ export class ConsoleLogger implements Logger {
   };
 
   constructor(options: { prefix?: string; minLevel?: LogLevel } = {}) {
-    this.prefix = options.prefix ?? 'auth-hub';
+    this.prefix = options.prefix ?? 'auth-ts';
     this.minLevel = options.minLevel ?? 'info';
   }
 

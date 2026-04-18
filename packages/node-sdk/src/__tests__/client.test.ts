@@ -1,4 +1,4 @@
-import { AuthHubClient, HttpError } from '../index';
+import { AuthClient, HttpError } from '../index';
 
 // ─── Fetch mock setup ─────────────────────────────────────────────────────────
 
@@ -18,11 +18,11 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-// ─── AuthHubClient construction ───────────────────────────────────────────────
+// ─── AuthClient construction ───────────────────────────────────────────────
 
-describe('AuthHubClient', () => {
+describe('AuthClient', () => {
   it('creates sub-modules on construction', () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     expect(client.auth).toBeDefined();
     expect(client.users).toBeDefined();
     expect(client.sessions).toBeDefined();
@@ -30,13 +30,13 @@ describe('AuthHubClient', () => {
   });
 
   it('setAccessToken() returns this for chaining', () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     const result = client.setAccessToken('my-token');
     expect(result).toBe(client);
   });
 
   it('sends Authorization header after setAccessToken()', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     client.setAccessToken('test-token');
 
     mockFetch(200, { success: true, data: { id: 'u1', email: 'a@b.com' } });
@@ -52,7 +52,7 @@ describe('AuthHubClient', () => {
   });
 
   it('clears token when setAccessToken(null) is called', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     client.setAccessToken('token');
     client.setAccessToken(null);
 
@@ -86,9 +86,9 @@ describe('HttpError', () => {
 // ─── auth.login() ─────────────────────────────────────────────────────────────
 
 describe('auth.login()', () => {
-  let client: AuthHubClient;
+  let client: AuthClient;
   beforeEach(() => {
-    client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    client = new AuthClient({ baseUrl: 'https://auth.example.com' });
   });
 
   it('calls POST /auth/login with credentials', async () => {
@@ -121,9 +121,9 @@ describe('auth.login()', () => {
 // ─── auth.register() ──────────────────────────────────────────────────────────
 
 describe('auth.register()', () => {
-  let client: AuthHubClient;
+  let client: AuthClient;
   beforeEach(() => {
-    client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    client = new AuthClient({ baseUrl: 'https://auth.example.com' });
   });
 
   it('calls POST /auth/register', async () => {
@@ -144,7 +144,7 @@ describe('auth.register()', () => {
 
 describe('auth.refreshToken()', () => {
   it('calls POST /auth/refresh', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     mockFetch(200, { success: true, data: { accessToken: 'new-tok' } });
 
     await client.auth.refreshToken('refresh-tok');
@@ -158,7 +158,7 @@ describe('auth.refreshToken()', () => {
 
 describe('users.me()', () => {
   it('calls GET /users/me', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     const userData = { id: 'u1', email: 'a@b.com', role: 'user', status: 'active' };
     mockFetch(200, { success: true, data: userData });
 
@@ -174,7 +174,7 @@ describe('users.me()', () => {
 
 describe('users.updateProfile()', () => {
   it('calls PATCH /users/me/profile', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     mockFetch(200, { success: true, data: { id: 'u1', displayName: 'Updated' } });
 
     await client.users.updateProfile({ displayName: 'Updated' });
@@ -190,7 +190,7 @@ describe('users.updateProfile()', () => {
 
 describe('sessions.list()', () => {
   it('calls GET /sessions', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     mockFetch(200, { success: true, data: [] });
 
     await client.sessions.list();
@@ -204,7 +204,7 @@ describe('sessions.list()', () => {
 
 describe('sessions.revoke()', () => {
   it('calls DELETE /sessions/:id', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     mockFetch(200, { success: true, data: undefined });
 
     await client.sessions.revoke('sess_123');
@@ -220,7 +220,7 @@ describe('sessions.revoke()', () => {
 
 describe('network errors', () => {
   it('throws HttpError with NETWORK_ERROR code on fetch failure', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
     mockFetchError('fetch failed');
 
     await expect(client.users.me()).rejects.toMatchObject({
@@ -229,7 +229,7 @@ describe('network errors', () => {
   });
 
   it('strips trailing slash from baseUrl', async () => {
-    const client = new AuthHubClient({ baseUrl: 'https://auth.example.com/' });
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com/' });
     mockFetch(200, { success: true, data: { id: 'u1' } });
 
     await client.users.me();
@@ -245,7 +245,7 @@ describe('network errors', () => {
 
 describe('custom default headers', () => {
   it('sends custom headers on every request', async () => {
-    const client = new AuthHubClient({
+    const client = new AuthClient({
       baseUrl: 'https://auth.example.com',
       headers: { 'x-client-id': 'my-app' },
     });

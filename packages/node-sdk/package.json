@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-node-sdk",
   "version": "0.1.0",
-  "description": "Node.js SDK client for Auth-Hub",
+  "description": "Node.js SDK client for Auth-TS",
   "keywords": ["auth", "authentication", "sdk", "typescript", "nodejs"],
   "license": "MIT",
   "main": "./dist/index.js",

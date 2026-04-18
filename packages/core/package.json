@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-core",
   "version": "0.1.0",
-  "description": "Core authentication logic for Auth-Hub — framework-agnostic",
+  "description": "Core authentication logic for Auth-TS — framework-agnostic",
   "keywords": ["auth", "authentication", "jwt", "bcrypt", "typescript"],
   "license": "MIT",
   "main": "./dist/index.js",

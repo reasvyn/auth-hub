@@ -4,7 +4,7 @@ import { MFAModule } from './modules/MFAModule';
 import { SessionsModule } from './modules/SessionsModule';
 import { UsersModule } from './modules/UsersModule';
 
-export interface AuthHubClientConfig {
+export interface AuthClientConfig {
   /** Base URL of your auth server. Example: 'https://auth.myapp.com' */
   baseUrl: string;
   /** Optional default headers (e.g. x-client-id) */
@@ -13,7 +13,7 @@ export interface AuthHubClientConfig {
   timeout?: number;
 }
 
-export class AuthHubClient {
+export class AuthClient {
   private http: HttpClient;
 
   readonly auth: AuthModule;
@@ -21,7 +21,7 @@ export class AuthHubClient {
   readonly sessions: SessionsModule;
   readonly mfa: MFAModule;
 
-  constructor(config: AuthHubClientConfig) {
+  constructor(config: AuthClientConfig) {
     this.http = new HttpClient({
       baseUrl: config.baseUrl,
       ...(config.timeout !== undefined ? { timeout: config.timeout } : {}),

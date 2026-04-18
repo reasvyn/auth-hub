@@ -1,5 +1,5 @@
 {
-  "name": "auth-hub",
+  "name": "auth-ts",
   "version": "0.0.1",
   "private": true,
   "description": "A comprehensive TypeScript authentication library monorepo",
@@ -36,7 +36,7 @@
   "packageManager": "npm@11.8.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reasvyn/auth-hub.git"
+    "url": "https://github.com/reasvyn/auth-ts.git"
   },
   "license": "MIT",
   "author": "Reas Vyn"

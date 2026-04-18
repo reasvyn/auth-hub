@@ -1,5 +1,5 @@
-export { AuthHubClient } from './AuthHubClient';
-export type { AuthHubClientConfig } from './AuthHubClient';
+export { AuthClient } from './AuthClient';
+export type { AuthClientConfig } from './AuthClient';
 
 export { HttpClient, HttpError } from './http/HttpClient';
 export type { HttpClientConfig, RequestOptions } from './http/HttpClient';

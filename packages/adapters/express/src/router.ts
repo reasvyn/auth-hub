@@ -4,7 +4,7 @@ import {
   generateEmailVerificationToken,
   generateMagicLinkToken,
   hashPassword,
-  isAuthHubError,
+  isAuthError,
   loginSchema,
   registerSchema,
   safeValidate,
@@ -81,7 +81,7 @@ function sendSuccess<T>(res: Response, data: T, status = 200) {
 }
 
 function sendError(res: Response, error: unknown, fallbackStatus = 500) {
-  if (isAuthHubError(error)) {
+  if (isAuthError(error)) {
     res.status(error.statusCode).json({ success: false, error: { code: error.code, message: error.message } });
     return;
   }

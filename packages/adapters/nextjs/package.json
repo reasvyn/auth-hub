@@ -1,7 +1,7 @@
 {
   "name": "@reasvyn/auth-nextjs",
   "version": "0.1.0",
-  "description": "Next.js adapter for Auth-Hub — App Router, Pages, and Edge Middleware",
+  "description": "Next.js adapter for Auth-TS — App Router, Pages, and Edge Middleware",
   "keywords": ["auth", "authentication", "nextjs", "next", "middleware", "typescript"],
   "license": "MIT",
   "main": "./dist/index.js",
