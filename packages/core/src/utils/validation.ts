@@ -54,6 +54,17 @@ const oneTimeCodePurposeSchema = z.enum([
 ]);
 
 const twoFactorMethodSchema = z.enum(['totp', 'sms', 'email']);
+const securityMethodTypeSchema = z.enum([
+  'password',
+  'totp',
+  'email_otp',
+  'sms_otp',
+  'recovery_code',
+]);
+const recoveryCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Z2-9-]{6,32}$/i, 'Recovery code format is invalid');
 
 export const requestOneTimeCodeSchema = z.object({
   purpose: oneTimeCodePurposeSchema,
@@ -62,12 +73,42 @@ export const requestOneTimeCodeSchema = z.object({
   context: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const configureSecurityMethodSchema = z.object({
+  method: securityMethodTypeSchema,
+  label: z.string().trim().min(1).max(128).optional(),
+  destination: z.string().trim().min(1).max(320).optional(),
+  isPrimary: z.boolean().optional(),
+});
+
 export const verifyOneTimeCodeSchema = z.object({
   challengeId: z.string().trim().min(1, 'Challenge ID is required'),
   code: z
     .string()
     .trim()
     .regex(/^\d{6,8}$/, 'One-time code must contain 6 to 8 digits'),
+});
+
+export const verifySecurityMethodSchema = z.object({
+  challengeId: z.string().trim().min(1).optional(),
+  code: z
+    .string()
+    .trim()
+    .regex(/^[A-Z0-9-]{6,32}$/i, 'Verification code format is invalid'),
+});
+
+export const disableSecurityMethodSchema = z
+  .object({
+    verificationCode: recoveryCodeSchema.optional(),
+    password: z.string().min(1).optional(),
+  })
+  .refine((data) => Boolean(data.verificationCode || data.password), {
+    message: 'Password or verification code is required',
+    path: ['password'],
+  });
+
+export const regenerateRecoveryCodesSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+  verificationCode: recoveryCodeSchema.optional(),
 });
 
 /**

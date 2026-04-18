@@ -1,11 +1,14 @@
 import type { AddressInfo } from 'net';
 
-import { createJWT, hashPassword, verifyOneTimeCodeHash } from '@reasvyn/auth-core';
+import { createJWT, hashPassword, verifyOneTimeCodeHash, verifyPassword } from '@reasvyn/auth-core';
 import type {
   OneTimeCodeChallenge,
   SecurityEvent,
   StoredOneTimeCodeChallenge,
+  StoredRecoveryCode,
   User,
+  UserSecurityMethod,
+  UserSecurityOverview,
 } from '@reasvyn/auth-types';
 import express, { json } from 'express';
 
@@ -15,7 +18,7 @@ const ACCESS_SECRET = 'test-access-secret';
 const REFRESH_SECRET = 'test-refresh-secret';
 const HMAC_SECRET = 'test-hmac-secret';
 
-jest.setTimeout(15_000);
+jest.setTimeout(20_000);
 
 type StoredUser = User & { passwordHash: string };
 
@@ -23,6 +26,17 @@ interface DeliveredOneTimeCode {
   code: string;
   destination: string;
   challenge: OneTimeCodeChallenge;
+}
+
+interface TestServerContext {
+  server: import('http').Server;
+  baseUrl: string;
+  accessToken: string;
+  deliveries: DeliveredOneTimeCode[];
+  oneTimeCodeChallenges: Map<string, StoredOneTimeCodeChallenge>;
+  securityEvents: SecurityEvent[];
+  securityMethods: Map<string, UserSecurityMethod>;
+  recoveryCodes: Map<string, StoredRecoveryCode>;
 }
 
 function createStoredUser(overrides: Partial<StoredUser> = {}): StoredUser {
@@ -36,18 +50,26 @@ function createStoredUser(overrides: Partial<StoredUser> = {}): StoredUser {
     role: 'user',
     status: 'active',
     passwordHash: '$2a$12$abcdefghijklmnopqrstuv',
+    profile: {
+      userId: 'user_1',
+      phoneNumber: '+6281234567890',
+      phoneVerified: true,
+    },
     ...overrides,
   };
 }
 
-async function createTestServer(user: StoredUser) {
+async function createTestServer(user: StoredUser): Promise<TestServerContext> {
   const app = express();
   app.use(json());
 
   const oneTimeCodeChallenges = new Map<string, StoredOneTimeCodeChallenge>();
   const securityEvents: SecurityEvent[] = [];
+  const securityMethods = new Map<string, UserSecurityMethod>();
+  const recoveryCodes = new Map<string, StoredRecoveryCode>();
   const deliveries: DeliveredOneTimeCode[] = [];
   let currentUser = user;
+  let currentPasswordHash = user.passwordHash;
 
   app.use(
     createAuthRouter({
@@ -73,6 +95,11 @@ async function createTestServer(user: StoredUser) {
         },
         updateUser: async (_userId, data) => {
           currentUser = { ...currentUser, ...data, updatedAt: new Date() };
+          const passwordHash = Reflect.get(data, 'passwordHash');
+          if (typeof passwordHash === 'string') {
+            currentPasswordHash = passwordHash;
+            currentUser = { ...currentUser, passwordHash };
+          }
           return currentUser;
         },
         storeRefreshToken: async () => undefined,
@@ -100,8 +127,84 @@ async function createTestServer(user: StoredUser) {
         createSecurityEvent: async (event) => {
           securityEvents.push(event);
         },
+        listSecurityEvents: async (userId, params) => {
+          const filtered = securityEvents
+            .filter((event) => event.userId === userId)
+            .filter((event) => (params?.types ? params.types.includes(event.type) : true))
+            .sort((left, right) => right.timestamp.getTime() - left.timestamp.getTime());
+
+          return {
+            items: filtered.slice(0, params?.limit ?? filtered.length),
+          };
+        },
         sendOneTimeCode: async ({ code, destination, challenge }) => {
           deliveries.push({ code, destination, challenge });
+        },
+        findPasswordCredential: async (userId) => {
+          if (userId !== currentUser.id) {
+            return null;
+          }
+
+          return {
+            userId,
+            email: currentUser.email,
+            passwordHash: currentPasswordHash,
+            passwordUpdatedAt: currentUser.updatedAt,
+            failedLoginAttempts: 0,
+          };
+        },
+        listUserSecurityMethods: async (userId) => {
+          return Array.from(securityMethods.values())
+            .filter((method) => method.userId === userId)
+            .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+        },
+        findUserSecurityMethodById: async (userId, methodId) => {
+          const method = securityMethods.get(methodId);
+          return method && method.userId === userId ? method : null;
+        },
+        createUserSecurityMethod: async (method) => {
+          securityMethods.set(method.id, method);
+          return method;
+        },
+        updateUserSecurityMethod: async (methodId, data) => {
+          const currentMethod = securityMethods.get(methodId);
+          if (!currentMethod) {
+            throw new Error(`Security method ${methodId} not found`);
+          }
+
+          const nextMethod: UserSecurityMethod = {
+            ...currentMethod,
+            ...data,
+          };
+          securityMethods.set(methodId, nextMethod);
+          return nextMethod;
+        },
+        listRecoveryCodes: async (userId) => {
+          return Array.from(recoveryCodes.values()).filter((code) => code.userId === userId);
+        },
+        replaceRecoveryCodes: async (userId, codes) => {
+          for (const [id, code] of recoveryCodes.entries()) {
+            if (code.userId === userId) {
+              recoveryCodes.delete(id);
+            }
+          }
+
+          for (const code of codes) {
+            recoveryCodes.set(code.id, code);
+          }
+        },
+        updateRecoveryCode: async (recoveryCodeId, data) => {
+          const currentCode = recoveryCodes.get(recoveryCodeId);
+          if (!currentCode) {
+            throw new Error(`Recovery code ${recoveryCodeId} not found`);
+          }
+
+          const nextCode: StoredRecoveryCode = {
+            ...currentCode,
+            ...data,
+          };
+          recoveryCodes.set(recoveryCodeId, nextCode);
+          return nextCode;
         },
       },
     }),
@@ -124,6 +227,8 @@ async function createTestServer(user: StoredUser) {
     deliveries,
     oneTimeCodeChallenges,
     securityEvents,
+    securityMethods,
+    recoveryCodes,
   };
 }
 
@@ -432,4 +537,213 @@ describe('createAuthRouter()', () => {
       await closeServer(server);
     }
   });
+
+  it('returns a persisted security overview with methods and recovery code counts', async () => {
+    const user = createStoredUser({
+      passwordHash: await hashPassword('Password123!'),
+    });
+    const { accessToken, baseUrl, recoveryCodes, securityMethods, server } =
+      await createTestServer(user);
+
+    try {
+      const now = new Date();
+      securityMethods.set('method_1', {
+        id: 'method_1',
+        userId: user.id,
+        type: 'email_otp',
+        status: 'enabled',
+        isPrimary: true,
+        redactedDestination: 'us**@example.com',
+        createdAt: now,
+        updatedAt: now,
+        verifiedAt: now,
+      });
+
+      recoveryCodes.set('recovery_1', {
+        id: 'recovery_1',
+        userId: user.id,
+        codeHash: 'hash-1',
+        hint: 'ABCD',
+        createdAt: now,
+      });
+      recoveryCodes.set('recovery_2', {
+        id: 'recovery_2',
+        userId: user.id,
+        codeHash: 'hash-2',
+        hint: 'EFGH',
+        createdAt: now,
+        usedAt: now,
+      });
+
+      const response = await fetch(`${baseUrl}/users/me/security`, {
+        headers: createAuthHeaders(accessToken),
+      });
+      const body = (await response.json()) as { data: UserSecurityOverview };
+
+      expect(response.status).toBe(200);
+      expect(body.data.passwordConfigured).toBe(true);
+      expect(body.data.methods).toHaveLength(1);
+      expect(body.data.recoveryCodesRemaining).toBe(1);
+      expect(body.data.userId).toBe(user.id);
+    } finally {
+      await closeServer(server);
+    }
+  });
+
+  it('configures and verifies an email security method end-to-end', async () => {
+    const user = createStoredUser();
+    const { accessToken, baseUrl, deliveries, securityEvents, securityMethods, server } =
+      await createTestServer(user);
+
+    try {
+      const configureResponse = await fetch(`${baseUrl}/users/me/security/methods`, {
+        method: 'POST',
+        headers: createAuthHeaders(accessToken),
+        body: JSON.stringify({
+          method: 'email_otp',
+          label: 'Backup email',
+          isPrimary: true,
+        }),
+      });
+      const configureBody = (await configureResponse.json()) as { data: UserSecurityMethod };
+
+      expect(configureResponse.status).toBe(201);
+      expect(configureBody.data.status).toBe('pending');
+      expect(configureBody.data.redactedDestination).toBe('us**@example.com');
+      expect(readStringMetadata(configureBody.data.metadata, 'pendingChallengeId')).toBeDefined();
+
+      const verifyResponse = await fetch(
+        `${baseUrl}/users/me/security/methods/${configureBody.data.id}/verify`,
+        {
+          method: 'POST',
+          headers: createAuthHeaders(accessToken),
+          body: JSON.stringify({
+            code: deliveries[0].code,
+            challengeId: readStringMetadata(configureBody.data.metadata, 'pendingChallengeId'),
+          }),
+        },
+      );
+      const verifyBody = (await verifyResponse.json()) as { data: UserSecurityMethod };
+
+      expect(verifyResponse.status).toBe(200);
+      expect(verifyBody.data.status).toBe('enabled');
+      expect(verifyBody.data.isPrimary).toBe(true);
+      expect(verifyBody.data.verifiedAt).toBeDefined();
+      expect(securityMethods.get(configureBody.data.id)?.status).toBe('enabled');
+      expect(securityEvents.map((event) => event.type)).toEqual(
+        expect.arrayContaining([
+          'security_method_configured',
+          'security_method_verified',
+          'otp_challenge_requested',
+          'otp_challenge_verified',
+        ]),
+      );
+    } finally {
+      await closeServer(server);
+    }
+  });
+
+  it('regenerates recovery codes, stores hashes, and lists security events', async () => {
+    const user = createStoredUser({
+      passwordHash: await hashPassword('Password123!'),
+    });
+    const { accessToken, baseUrl, recoveryCodes, securityEvents, server } =
+      await createTestServer(user);
+
+    try {
+      const response = await fetch(`${baseUrl}/users/me/security/recovery-codes`, {
+        method: 'POST',
+        headers: createAuthHeaders(accessToken),
+        body: JSON.stringify({ password: 'Password123!' }),
+      });
+      const body = (await response.json()) as {
+        data: { generatedAt: string; codes: string[] };
+      };
+
+      expect(response.status).toBe(200);
+      expect(body.data.codes).toHaveLength(10);
+      expect(recoveryCodes.size).toBe(10);
+
+      const firstStoredCode = Array.from(recoveryCodes.values())[0];
+      expect(firstStoredCode.codeHash).not.toBe(body.data.codes[0]);
+      await expect(verifyPassword(body.data.codes[0], firstStoredCode.codeHash)).resolves.toBe(
+        true,
+      );
+      expect(securityEvents.at(-1)?.type).toBe('recovery_codes_regenerated');
+
+      const eventsResponse = await fetch(`${baseUrl}/users/me/security/events?limit=2`, {
+        headers: createAuthHeaders(accessToken),
+      });
+      const eventsBody = (await eventsResponse.json()) as {
+        data: { items: SecurityEvent[] };
+      };
+
+      expect(eventsResponse.status).toBe(200);
+      expect(eventsBody.data.items.length).toBeGreaterThanOrEqual(1);
+      expect(eventsBody.data.items[0].type).toBe('recovery_codes_regenerated');
+    } finally {
+      await closeServer(server);
+    }
+  });
+
+  it('disables a security method using a recovery code', async () => {
+    const user = createStoredUser({
+      passwordHash: await hashPassword('Password123!'),
+    });
+    const { accessToken, baseUrl, deliveries, securityMethods, server } =
+      await createTestServer(user);
+
+    try {
+      const configureResponse = await fetch(`${baseUrl}/users/me/security/methods`, {
+        method: 'POST',
+        headers: createAuthHeaders(accessToken),
+        body: JSON.stringify({
+          method: 'email_otp',
+          isPrimary: true,
+        }),
+      });
+      const configureBody = (await configureResponse.json()) as { data: UserSecurityMethod };
+
+      await fetch(`${baseUrl}/users/me/security/methods/${configureBody.data.id}/verify`, {
+        method: 'POST',
+        headers: createAuthHeaders(accessToken),
+        body: JSON.stringify({
+          code: deliveries[0].code,
+          challengeId: readStringMetadata(configureBody.data.metadata, 'pendingChallengeId'),
+        }),
+      });
+
+      const recoveryResponse = await fetch(`${baseUrl}/users/me/security/recovery-codes`, {
+        method: 'POST',
+        headers: createAuthHeaders(accessToken),
+        body: JSON.stringify({ password: 'Password123!' }),
+      });
+      const recoveryBody = (await recoveryResponse.json()) as {
+        data: { codes: string[] };
+      };
+
+      const disableResponse = await fetch(
+        `${baseUrl}/users/me/security/methods/${configureBody.data.id}/disable`,
+        {
+          method: 'POST',
+          headers: createAuthHeaders(accessToken),
+          body: JSON.stringify({ verificationCode: recoveryBody.data.codes[0] }),
+        },
+      );
+
+      expect(disableResponse.status).toBe(200);
+      expect(securityMethods.get(configureBody.data.id)?.status).toBe('disabled');
+      expect(securityMethods.get(configureBody.data.id)?.isPrimary).toBe(false);
+    } finally {
+      await closeServer(server);
+    }
+  });
 });
+
+function readStringMetadata(
+  metadata: Record<string, unknown> | undefined,
+  key: string,
+): string | undefined {
+  const value = metadata?.[key];
+  return typeof value === 'string' ? value : undefined;
+}

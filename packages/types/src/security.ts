@@ -55,6 +55,11 @@ export interface RecoveryCode {
   usedAt?: Date;
 }
 
+export interface StoredRecoveryCode extends RecoveryCode {
+  userId: string;
+  codeHash: string;
+}
+
 export type OneTimeCodePurpose =
   | 'email_verification'
   | 'password_reset'
@@ -192,6 +197,10 @@ export type SecurityEventType =
   | 'otp_challenge_verified'
   | 'otp_challenge_failed'
   | 'otp_challenge_expired'
+  | 'security_method_configured'
+  | 'security_method_verified'
+  | 'security_method_disabled'
+  | 'recovery_codes_regenerated'
   | 'suspicious_activity'
   | 'account_locked'
   | 'account_unlocked'

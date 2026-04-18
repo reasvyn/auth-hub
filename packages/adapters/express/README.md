@@ -4,7 +4,7 @@ Express middleware and ready-to-mount auth router for Auth-TS.
 
 ## Overview
 
-`@reasvyn/auth-express` provides the Express integration layer for Auth-TS. It exposes middleware for authentication and role checks, plus `createAuthRouter()` for common auth flows such as register, login, refresh, magic link, email verification, password reset, and authenticated one-time-code challenge flows.
+`@reasvyn/auth-express` provides the Express integration layer for Auth-TS. It exposes middleware for authentication and role checks, plus `createAuthRouter()` for common auth flows such as register, login, refresh, magic link, email verification, password reset, authenticated one-time-code challenges, recovery code regeneration, and security method enrollment flows.
 
 The package is service-driven: you provide the persistence and delivery functions, and the adapter handles routing, validation, token issuance, and JSON response envelopes.
 
@@ -74,9 +74,35 @@ app.use(
       updateOneTimeCodeChallenge: (id, data) =>
         db.oneTimeCodeChallenges.update({ where: { id }, data }),
       createSecurityEvent: (event) => db.securityEvents.create({ data: event }),
+      listSecurityEvents: (userId, params) =>
+        db.securityEvents
+          .findMany({
+            where: {
+              userId,
+              ...(params?.types ? { type: { in: params.types } } : {}),
+            },
+            orderBy: { timestamp: 'desc' },
+            take: params?.limit,
+          })
+          .then((items) => ({ items })),
       sendOneTimeCode: async ({ destination, code }) => {
         await mailer.sendOtp({ to: destination, code });
       },
+      findPasswordCredential: (userId) => db.passwordCredentials.findUnique({ where: { userId } }),
+      listUserSecurityMethods: (userId) =>
+        db.securityMethods.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } }),
+      findUserSecurityMethodById: (userId, methodId) =>
+        db.securityMethods.findFirst({ where: { id: methodId, userId } }),
+      createUserSecurityMethod: (method) => db.securityMethods.create({ data: method }),
+      updateUserSecurityMethod: (methodId, data) =>
+        db.securityMethods.update({ where: { id: methodId }, data }),
+      listRecoveryCodes: (userId) => db.recoveryCodes.findMany({ where: { userId } }),
+      replaceRecoveryCodes: async (userId, codes) => {
+        await db.recoveryCodes.deleteMany({ where: { userId } });
+        await db.recoveryCodes.createMany({ data: codes });
+      },
+      updateRecoveryCode: (recoveryCodeId, data) =>
+        db.recoveryCodes.update({ where: { id: recoveryCodeId }, data }),
     },
   }),
 );
@@ -142,7 +168,16 @@ Required responsibilities:
 - `findOneTimeCodeChallenge(challengeId)`
 - `updateOneTimeCodeChallenge(challengeId, data)`
 - `createSecurityEvent(event)`
+- `listSecurityEvents(userId, params?)`
 - `sendOneTimeCode({ user, destination, code, challenge })`
+- `findPasswordCredential(userId)`
+- `listUserSecurityMethods(userId)`
+- `findUserSecurityMethodById(userId, methodId)`
+- `createUserSecurityMethod(method)`
+- `updateUserSecurityMethod(methodId, data)`
+- `listRecoveryCodes(userId)`
+- `replaceRecoveryCodes(userId, codes)`
+- `updateRecoveryCode(recoveryCodeId, data)`
 
 Optional:
 
@@ -164,15 +199,22 @@ Errors return:
 { "success": false, "error": { "code": "UNAUTHORIZED", "message": "..." } }
 ```
 
-### OTP Challenge Routes
+### Security Routes
 
-When mounted at the application root, `createAuthRouter()` exposes both auth endpoints and authenticated OTP challenge endpoints:
+When mounted at the application root, `createAuthRouter()` exposes both auth endpoints and authenticated security-management endpoints:
 
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /auth/refresh`
+- `GET /users/me/security`
+- `GET /users/me/security/methods`
+- `POST /users/me/security/methods`
+- `POST /users/me/security/methods/:methodId/verify`
+- `POST /users/me/security/methods/:methodId/disable`
 - `POST /users/me/security/challenges`
 - `POST /users/me/security/challenges/verify`
+- `POST /users/me/security/recovery-codes`
+- `GET /users/me/security/events`
 
 ### Security Notes
 
@@ -181,6 +223,8 @@ When mounted at the application root, `createAuthRouter()` exposes both auth end
 - magic link and password reset flows avoid obvious email enumeration behavior
 - auth responses are sanitized before sending user objects back to clients
 - OTP challenges are stored as hashes, expire automatically, decrement attempts on failure, and become single-use after success or exhaustion
+- security method enrollment is challenge-bound and cannot be completed with an unrelated OTP
+- recovery codes are regenerated as hashed-at-rest records and can authorize high-risk method disable flows
 
 ## License
 

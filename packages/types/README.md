@@ -90,6 +90,7 @@ The package re-exports all definitions from:
 | `AuthError`                  | Serialized error payload structure, not the runtime `Error` class from `@reasvyn/auth-core`                |
 | `PasswordCredential`         | Stored credential state for password-based sign-in, including lock and compromise metadata                 |
 | `UserSecurityMethod`         | Normalized record for enabled, pending, disabled, or locked security methods                               |
+| `StoredRecoveryCode`         | Persistence record for hashed recovery codes, including ownership and single-use state                     |
 | `OneTimeCodeChallenge`       | OTP challenge state for email, SMS, sign-in, reset, and verification flows                                 |
 | `StoredOneTimeCodeChallenge` | Persistence shape for hashed OTP challenges and their single-use lifecycle                                 |
 | `UserSecurityOverview`       | Aggregated security posture summary for account settings and admin review screens                          |
@@ -127,7 +128,8 @@ The `security` module now includes a shared baseline for built-in credential aut
 - `ConfigureSecurityMethodRequest`, `VerifySecurityMethodRequest`, and `DisableSecurityMethodRequest` for enrollment flows
 - `RequestOneTimeCodeRequest` and `VerifyOneTimeCodeRequest` for challenge-based verification
 - `StoredOneTimeCodeChallenge` for persistence layers that must store hashed OTP state, raw destination, and consumption metadata
-- `RecoveryCode` and `RegenerateRecoveryCodesResponse` for recovery workflows
+- `StoredRecoveryCode`, `RegenerateRecoveryCodesRequest`, and `RegenerateRecoveryCodesResponse` for recovery workflows
+- `SecurityEventType` values for OTP, security-method lifecycle, and recovery-code audit events
 
 ## License
 
