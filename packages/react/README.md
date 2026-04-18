@@ -70,7 +70,10 @@ export const adapter: AuthAdapter = {
     return response.json();
   },
   logout: async () => undefined,
-  refreshToken: async (token) => ({ success: true, session: { accessToken: token, expiresAt: new Date(), tokenType: 'Bearer' } }),
+  refreshToken: async (token) => ({
+    success: true,
+    session: { accessToken: token, expiresAt: new Date(), tokenType: 'Bearer' },
+  }),
   getUser: async () => null,
 };
 ```

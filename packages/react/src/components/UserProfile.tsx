@@ -87,7 +87,9 @@ function Badge({ children, color = 'indigo' }: { children: React.ReactNode; colo
     yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]}`}
+    >
       {children}
     </span>
   );

@@ -23,7 +23,10 @@ export function TeamCreateForm({ onSuccess, onCancel, className = '' }: TeamCrea
     setSubmitting(true);
     setError(null);
     try {
-      const team = await createTeam({ name: name.trim(), description: description.trim() || undefined });
+      const team = await createTeam({
+        name: name.trim(),
+        description: description.trim() || undefined,
+      });
       onSuccess?.(team.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create team');
@@ -33,7 +36,9 @@ export function TeamCreateForm({ onSuccess, onCancel, className = '' }: TeamCrea
   };
 
   return (
-    <div className={`rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 ${className}`}>
+    <div
+      className={`rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 ${className}`}
+    >
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create a team</h2>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
@@ -66,9 +71,7 @@ export function TeamCreateForm({ onSuccess, onCancel, className = '' }: TeamCrea
           />
         </div>
 
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         <div className="flex gap-2 pt-1">
           <button

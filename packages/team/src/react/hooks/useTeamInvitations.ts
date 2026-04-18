@@ -47,7 +47,9 @@ export function useTeamInvitations(userId: string): UseTeamInvitationsReturn {
     }
   }, [adapter, currentTeam]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const invite = useCallback(
     async (email: string, role: TeamRole, appBaseUrl = ''): Promise<TeamInvitation> => {
@@ -76,10 +78,13 @@ export function useTeamInvitations(userId: string): UseTeamInvitationsReturn {
     [adapter, currentTeam, userId],
   );
 
-  const cancel = useCallback(async (invitationId: string) => {
-    await adapter.updateInvitationStatus(invitationId, 'cancelled');
-    setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
-  }, [adapter]);
+  const cancel = useCallback(
+    async (invitationId: string) => {
+      await adapter.updateInvitationStatus(invitationId, 'cancelled');
+      setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+    },
+    [adapter],
+  );
 
   const accept = useCallback(
     async (token: string, acceptingUserId: string) => {
@@ -97,12 +102,15 @@ export function useTeamInvitations(userId: string): UseTeamInvitationsReturn {
     [adapter],
   );
 
-  const decline = useCallback(async (token: string) => {
-    const invitation = await adapter.getInvitationByToken(token);
-    if (!invitation) throw new Error('Invitation not found');
-    await adapter.updateInvitationStatus(invitation.id, 'declined');
-    setInvitations((prev) => prev.filter((i) => i.token !== token));
-  }, [adapter]);
+  const decline = useCallback(
+    async (token: string) => {
+      const invitation = await adapter.getInvitationByToken(token);
+      if (!invitation) throw new Error('Invitation not found');
+      await adapter.updateInvitationStatus(invitation.id, 'declined');
+      setInvitations((prev) => prev.filter((i) => i.token !== token));
+    },
+    [adapter],
+  );
 
   return { invitations, isLoading, error, invite, cancel, accept, decline, refresh };
 }

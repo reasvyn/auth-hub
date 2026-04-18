@@ -25,10 +25,7 @@ import type { RBACConfig, RoleDefinition } from './types';
 export class RoleBuilder {
   private readonly roles: RoleDefinition[] = [];
 
-  role(
-    name: string,
-    definition: Omit<RoleDefinition, 'name'>,
-  ): this {
+  role(name: string, definition: Omit<RoleDefinition, 'name'>): this {
     if (this.roles.some((r) => r.name === name)) {
       throw new Error(`[auth-rbac] Role "${name}" is already defined.`);
     }
@@ -37,10 +34,7 @@ export class RoleBuilder {
   }
 
   /** Extend an existing role with additional permissions without redefining it. */
-  extend(
-    name: string,
-    extra: { permissions?: string[]; inherits?: string[] },
-  ): this {
+  extend(name: string, extra: { permissions?: string[]; inherits?: string[] }): this {
     const existing = this.roles.find((r) => r.name === name);
     if (!existing) {
       throw new Error(`[auth-rbac] Cannot extend unknown role "${name}".`);

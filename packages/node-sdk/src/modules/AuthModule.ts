@@ -30,7 +30,9 @@ export class AuthModule {
   }
 
   refreshToken(refreshToken: string): Promise<AuthResponse> {
-    return this.http.post<AuthResponse>('/auth/refresh', { refreshToken } satisfies RefreshTokenRequest);
+    return this.http.post<AuthResponse>('/auth/refresh', {
+      refreshToken,
+    } satisfies RefreshTokenRequest);
   }
 
   sendMagicLink(email: string): Promise<void> {
@@ -54,15 +56,27 @@ export class AuthModule {
   }
 
   confirmPasswordReset(token: string, newPassword: string): Promise<void> {
-    return this.http.post<void>('/auth/password/reset/confirm', { token, newPassword } satisfies PasswordResetConfirmRequest);
+    return this.http.post<void>('/auth/password/reset/confirm', {
+      token,
+      newPassword,
+    } satisfies PasswordResetConfirmRequest);
   }
 
   changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    return this.http.post<void>('/auth/password/change', { currentPassword, newPassword } satisfies ChangePasswordRequest);
+    return this.http.post<void>('/auth/password/change', {
+      currentPassword,
+      newPassword,
+    } satisfies ChangePasswordRequest);
   }
 
-  getOAuthUrl(provider: OAuthProvider, redirectUri: string): Promise<{ url: string; state: string }> {
-    return this.http.post<{ url: string; state: string }>('/auth/oauth/url', { provider, redirectUri });
+  getOAuthUrl(
+    provider: OAuthProvider,
+    redirectUri: string,
+  ): Promise<{ url: string; state: string }> {
+    return this.http.post<{ url: string; state: string }>('/auth/oauth/url', {
+      provider,
+      redirectUri,
+    });
   }
 
   exchangeOAuthCode(provider: OAuthProvider, code: string, state: string): Promise<AuthResponse> {
@@ -70,9 +84,9 @@ export class AuthModule {
   }
 
   verifyMFA(code: string, method: TwoFactorMethod): Promise<AuthResponse> {
-    return this.http.post<AuthResponse>(
-      '/auth/mfa/verify',
-      { code, method } satisfies Pick<MFAVerifyRequest, 'code' | 'method'>,
-    );
+    return this.http.post<AuthResponse>('/auth/mfa/verify', { code, method } satisfies Pick<
+      MFAVerifyRequest,
+      'code' | 'method'
+    >);
   }
 }

@@ -2,7 +2,11 @@
   "name": "@reasvyn/auth-types",
   "version": "0.1.0",
   "description": "Shared TypeScript type definitions for Auth-TS",
-  "keywords": ["auth", "typescript", "types"],
+  "keywords": [
+    "auth",
+    "typescript",
+    "types"
+  ],
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -14,7 +18,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "dev": "tsc --project tsconfig.build.json --watch",

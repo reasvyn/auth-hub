@@ -21,7 +21,9 @@ export function Card({
         'border border-gray-200 dark:border-gray-700',
         'shadow-sm',
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {children}
     </div>
@@ -38,11 +40,7 @@ export function Heading({ children }: { children: ReactNode }) {
 }
 
 export function Subheading({ children }: { children: ReactNode }) {
-  return (
-    <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">
-      {children}
-    </p>
-  );
+  return <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">{children}</p>;
 }
 
 // ----- Alert / Error banner -----
@@ -100,7 +98,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500',
           'focus:outline-none focus:ring-2 focus:ring-offset-0',
           className,
-        ].filter(Boolean).join(' ')}
+        ]
+          .filter(Boolean)
+          .join(' ')}
         {...props}
       />
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
@@ -114,12 +114,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
   loading?: boolean;
 }
-export function Button({ variant = 'primary', loading, children, className, disabled, ...props }: ButtonProps) {
-  const base = 'flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
+export function Button({
+  variant = 'primary',
+  loading,
+  children,
+  className,
+  disabled,
+  ...props
+}: ButtonProps) {
+  const base =
+    'flex items-center justify-center w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
   const variants = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600',
-    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-600 dark:hover:bg-gray-800 dark:text-gray-400',
+    primary:
+      'bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600',
+    secondary:
+      'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200',
+    ghost:
+      'bg-transparent hover:bg-gray-100 text-gray-600 dark:hover:bg-gray-800 dark:text-gray-400',
   };
   return (
     <button
@@ -131,7 +142,9 @@ export function Button({ variant = 'primary', loading, children, className, disa
         <span className="flex items-center gap-2">
           <Spinner /> {children}
         </span>
-      ) : children}
+      ) : (
+        children
+      )}
     </button>
   );
 }
@@ -141,13 +154,21 @@ export function Spinner() {
   return (
     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
     </svg>
   );
 }
 
 // ----- TextButton (link-style) -----
-export function TextButton({ children, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+export function TextButton({
+  children,
+  className,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type="button"
@@ -155,7 +176,9 @@ export function TextButton({ children, className, ...props }: ButtonHTMLAttribut
         'text-sm text-indigo-600 dark:text-indigo-400 hover:underline',
         'bg-transparent border-none cursor-pointer p-0',
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
       {...props}
     >
       {children}

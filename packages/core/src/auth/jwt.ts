@@ -40,7 +40,11 @@ export function createJWT(
 /**
  * Verify and decode a JWT token
  */
-export function verifyJWT(token: string, secret: string, options: jwt.VerifyOptions = {}): JWTPayload {
+export function verifyJWT(
+  token: string,
+  secret: string,
+  options: jwt.VerifyOptions = {},
+): JWTPayload {
   const decoded = jwt.verify(token, secret, options);
   return decoded as JWTPayload;
 }
@@ -67,12 +71,7 @@ export function createTokenPair(
     audience?: string | string[];
   } = {},
 ): TokenPair {
-  const {
-    accessTokenExpiry = '15m',
-    refreshTokenExpiry = '7d',
-    issuer,
-    audience,
-  } = options;
+  const { accessTokenExpiry = '15m', refreshTokenExpiry = '7d', issuer, audience } = options;
 
   const now = new Date();
   const sharedOptions: JWTOptions = {};

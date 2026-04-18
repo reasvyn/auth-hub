@@ -78,11 +78,7 @@ import { RBACProvider, Can } from '@reasvyn/auth-rbac/react';
 ```ts
 import { requirePermission } from '@reasvyn/auth-rbac/middleware';
 
-app.delete(
-  '/api/posts/:id',
-  requirePermission({ rbac, permission: 'posts:delete' }),
-  handler,
-);
+app.delete('/api/posts/:id', requirePermission({ rbac, permission: 'posts:delete' }), handler);
 ```
 
 ## Technical Reference

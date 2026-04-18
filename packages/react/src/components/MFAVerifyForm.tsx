@@ -43,9 +43,7 @@ export function MFAVerifyForm({
     <Card className={className}>
       <div className="text-center text-4xl mb-4">🔑</div>
       <Heading>Two-factor authentication</Heading>
-      <Subheading>
-        Enter the 6-digit code from your {methodLabel[method]}.
-      </Subheading>
+      <Subheading>Enter the 6-digit code from your {methodLabel[method]}.</Subheading>
 
       <div className="flex flex-col gap-4">
         {error && <ErrorAlert message={error} />}

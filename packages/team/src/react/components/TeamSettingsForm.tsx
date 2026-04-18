@@ -11,7 +11,11 @@ export interface TeamSettingsFormProps {
 /**
  * Team settings: update name/description, danger zone (delete / transfer ownership).
  */
-export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: TeamSettingsFormProps) {
+export function TeamSettingsForm({
+  currentUserId,
+  onDeleted,
+  className = '',
+}: TeamSettingsFormProps) {
   const { currentTeam, currentRole, updateTeam, deleteTeam, transferOwnership } = useTeam();
 
   const [name, setName] = useState(currentTeam?.name ?? '');
@@ -79,10 +83,14 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
     <div className={`space-y-6 ${className}`}>
       {/* General settings */}
       <section className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">General settings</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          General settings
+        </h3>
         <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Team name
+            </label>
             <input
               type="text"
               value={name}
@@ -93,7 +101,9 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -103,7 +113,9 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
             />
           </div>
           {saveMsg && (
-            <p className={`text-sm ${saveMsg.startsWith('Changes') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <p
+              className={`text-sm ${saveMsg.startsWith('Changes') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+            >
               {saveMsg}
             </p>
           )}
@@ -120,11 +132,15 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
       {/* Danger zone */}
       {isOwner && (
         <section className="rounded-xl border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 p-6">
-          <h3 className="text-base font-semibold text-red-600 dark:text-red-400 mb-4">Danger zone</h3>
+          <h3 className="text-base font-semibold text-red-600 dark:text-red-400 mb-4">
+            Danger zone
+          </h3>
 
           {/* Transfer ownership */}
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transfer ownership</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Transfer ownership
+            </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
               Transfer ownership to another member's email. You'll become an admin.
             </p>
@@ -144,14 +160,18 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
                 {transferring ? 'Transferring…' : 'Transfer'}
               </button>
             </form>
-            {transferError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{transferError}</p>}
+            {transferError && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{transferError}</p>
+            )}
           </div>
 
           {/* Delete team */}
           <div>
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delete team</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-              This action cannot be undone. Type <strong className="text-gray-600 dark:text-gray-300">{currentTeam.name}</strong> to confirm.
+              This action cannot be undone. Type{' '}
+              <strong className="text-gray-600 dark:text-gray-300">{currentTeam.name}</strong> to
+              confirm.
             </p>
             <form onSubmit={(e) => void handleDelete(e)} className="flex gap-2">
               <input
@@ -169,7 +189,9 @@ export function TeamSettingsForm({ currentUserId, onDeleted, className = '' }: T
                 {deleting ? 'Deleting…' : 'Delete team'}
               </button>
             </form>
-            {deleteError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{deleteError}</p>}
+            {deleteError && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{deleteError}</p>
+            )}
           </div>
         </section>
       )}

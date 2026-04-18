@@ -28,7 +28,13 @@ export interface CanProps {
  *   <EditMenu />
  * </Can>
  */
-export function Can({ permission, anyOf, allOf, fallback = null, children }: CanProps): React.ReactNode {
+export function Can({
+  permission,
+  anyOf,
+  allOf,
+  fallback = null,
+  children,
+}: CanProps): React.ReactNode {
   const permissions = usePermissions();
 
   let granted = false;

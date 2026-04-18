@@ -1,4 +1,10 @@
-import type { RBACConfig, RoleDefinition, Permission, PermissionCheckResult, PermissionChecker } from './types';
+import type {
+  RBACConfig,
+  RoleDefinition,
+  Permission,
+  PermissionCheckResult,
+  PermissionChecker,
+} from './types';
 
 /**
  * Checks whether a permission string matches a target.

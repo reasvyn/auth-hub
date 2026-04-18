@@ -69,11 +69,7 @@ import { createNextJsAdapter } from '@reasvyn/auth-nextjs/client';
 
 const adapter = createNextJsAdapter({ basePath: '/api/auth' });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
@@ -149,9 +145,8 @@ It returns:
 `withAuth(options, handler)` wraps an App Router route handler and resolves `session` before your handler executes.
 
 ```ts
-export const GET = withAuth(
-  { secret: process.env.JWT_ACCESS_SECRET! },
-  async (_req, { session }) => Response.json({ userId: session.userId }),
+export const GET = withAuth({ secret: process.env.JWT_ACCESS_SECRET! }, async (_req, { session }) =>
+  Response.json({ userId: session.userId }),
 );
 ```
 

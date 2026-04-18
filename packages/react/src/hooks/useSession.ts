@@ -5,7 +5,6 @@ import type { AuthAdapter } from '../types';
 
 import { useAuth } from './useAuth';
 
-
 interface UseSessionReturn {
   sessions: ActiveSession[];
   loading: boolean;

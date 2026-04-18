@@ -62,6 +62,7 @@ auth-ts/
 ### Making Changes
 
 1. Create a branch from `develop`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -69,14 +70,17 @@ auth-ts/
 2. Make your changes with clear, focused commits
 
 3. Run root validation commands:
+
    ```bash
    npm run lint
+   npm run format:check
    npm run type-check
    npm run test
    npm run build
    ```
 
 4. Format your code:
+
    ```bash
    npm run format
    ```
@@ -98,6 +102,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -107,6 +112,7 @@ Types:
 - `chore`: Build process or tooling changes
 
 Examples:
+
 ```
 feat(core): add TOTP 2FA support
 fix(react): resolve LoginForm validation issue
@@ -116,11 +122,13 @@ docs(types): add JSDoc comments to AuthError
 ## Adding a New Package
 
 1. Create directory under `packages/`:
+
    ```bash
    mkdir packages/my-package
    ```
 
 2. Initialize with proper `package.json`:
+
    ```json
    {
      "name": "@reasvyn/auth-my-package",
@@ -131,6 +139,7 @@ docs(types): add JSDoc comments to AuthError
    ```
 
 3. Add `tsconfig.json` extending root:
+
    ```json
    {
      "extends": "../../tsconfig.json",

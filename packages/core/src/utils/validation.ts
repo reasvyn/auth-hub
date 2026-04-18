@@ -29,10 +29,10 @@ export const registerSchema = z
     displayName: z.string().max(64).optional(),
     acceptTerms: z.boolean().optional(),
   })
-  .refine(
-    (data) => !data.confirmPassword || data.password === data.confirmPassword,
-    { message: 'Passwords do not match', path: ['confirmPassword'] },
-  );
+  .refine((data) => !data.confirmPassword || data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export const changePasswordSchema = z
   .object({
@@ -40,10 +40,10 @@ export const changePasswordSchema = z
     newPassword: passwordSchema,
     confirmPassword: z.string().optional(),
   })
-  .refine(
-    (data) => !data.confirmPassword || data.newPassword === data.confirmPassword,
-    { message: 'Passwords do not match', path: ['confirmPassword'] },
-  );
+  .refine((data) => !data.confirmPassword || data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 /**
  * Convert zod errors to ValidationError array

@@ -50,9 +50,7 @@ export function getOAuthAuthorizationUrl(
 
   if (usePKCE) {
     codeVerifier = randomBytes(32).toString('base64url');
-    codeChallenge = createHash('sha256')
-      .update(codeVerifier)
-      .digest('base64url');
+    codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
   }
 
   const params = new URLSearchParams({

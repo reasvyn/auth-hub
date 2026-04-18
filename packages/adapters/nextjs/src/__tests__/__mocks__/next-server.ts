@@ -32,7 +32,8 @@ export class NextRequest extends Request {
   constructor(input: string | URL, init?: RequestInit & { cookies?: Record<string, string> }) {
     super(input, init);
     this.nextUrl = new URL(input.toString());
-    const cookieMap: Record<string, string> = (init as { cookies?: Record<string, string> })?.cookies ?? {};
+    const cookieMap: Record<string, string> =
+      (init as { cookies?: Record<string, string> })?.cookies ?? {};
     this.cookies = {
       get: (name: string) => (cookieMap[name] ? { value: cookieMap[name] } : undefined),
     };

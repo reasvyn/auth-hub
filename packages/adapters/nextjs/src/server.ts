@@ -66,10 +66,7 @@ export interface WithAuthOptions {
   cookieName?: string;
 }
 
-type AuthHandler = (
-  req: Request,
-  ctx: { session: AuthSession },
-) => Promise<Response> | Response;
+type AuthHandler = (req: Request, ctx: { session: AuthSession }) => Promise<Response> | Response;
 
 export function withAuth(options: WithAuthOptions, handler: AuthHandler) {
   return async (req: Request): Promise<Response> => {

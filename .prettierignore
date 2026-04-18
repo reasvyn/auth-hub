@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.turbo/
+.pnp
+.pnp.js
+.npm/
+.eslintcache
+.prettiercache
+package-lock.json
+*.tsbuildinfo
+*.log

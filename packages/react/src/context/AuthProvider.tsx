@@ -13,7 +13,6 @@ import type { AuthState, AuthProviderProps } from '../types';
 
 import { AuthContext } from './AuthContext';
 
-
 type TokenBearingAuthResponse = AuthResponse & {
   accessToken?: string;
   refreshToken?: string;
@@ -88,7 +87,13 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
     case 'SET_LOADING':
       return { ...state, status: 'loading', error: null };
     case 'SET_USER':
-      return { ...state, status: 'authenticated', user: action.user, accessToken: action.accessToken, error: null };
+      return {
+        ...state,
+        status: 'authenticated',
+        user: action.user,
+        accessToken: action.accessToken,
+        error: null,
+      };
     case 'SET_ERROR':
       return { ...state, status: 'unauthenticated', error: action.error };
     case 'LOGOUT':
@@ -163,7 +168,8 @@ export function AuthProvider({
     let cancelled = false;
     async function init() {
       try {
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
+        const refreshToken =
+          typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
         if (refreshToken) {
           const response = await adapter.refreshToken(refreshToken);
           const session = extractSessionState(response);
@@ -229,7 +235,8 @@ export function AuthProvider({
       try {
         const response = await adapter.register(credentials);
         const session = extractSessionState(response);
-        if (!response.user || !session.accessToken) throw new Error('Invalid response from register');
+        if (!response.user || !session.accessToken)
+          throw new Error('Invalid response from register');
         const user = normalizeUser(response.user);
         dispatch({ type: 'SET_USER', user, accessToken: session.accessToken });
         if (session.refreshToken) {
@@ -248,7 +255,8 @@ export function AuthProvider({
 
   const logout = useCallback(async () => {
     clearRefreshTimer();
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
+    const refreshToken =
+      typeof window !== 'undefined' ? localStorage.getItem('auth_refresh_token') : null;
     try {
       await adapter.logout(refreshToken ?? undefined);
     } finally {
@@ -275,13 +283,15 @@ export function AuthProvider({
   );
 
   const sendEmailVerification = useCallback(async () => {
-    if (!adapter.sendEmailVerification) throw new Error('Email verification not configured in adapter');
+    if (!adapter.sendEmailVerification)
+      throw new Error('Email verification not configured in adapter');
     await adapter.sendEmailVerification();
   }, [adapter]);
 
   const requestPasswordReset = useCallback(
     async (email: string) => {
-      if (!adapter.requestPasswordReset) throw new Error('Password reset not configured in adapter');
+      if (!adapter.requestPasswordReset)
+        throw new Error('Password reset not configured in adapter');
       await adapter.requestPasswordReset(email);
     },
     [adapter],
@@ -289,7 +299,8 @@ export function AuthProvider({
 
   const confirmPasswordReset = useCallback(
     async (token: string, newPassword: string) => {
-      if (!adapter.confirmPasswordReset) throw new Error('Password reset not configured in adapter');
+      if (!adapter.confirmPasswordReset)
+        throw new Error('Password reset not configured in adapter');
       await adapter.confirmPasswordReset(token, newPassword);
     },
     [adapter],

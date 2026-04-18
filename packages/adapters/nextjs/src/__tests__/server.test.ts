@@ -121,8 +121,9 @@ describe('withAuth()', () => {
 
   it('reads token from cookie header', async () => {
     const token = makeToken();
-    const cookieHandler = withAuth({ secret: SECRET, cookieName: 'access_token' }, async (_req, { session }) =>
-      Response.json({ ok: true, userId: session.userId }),
+    const cookieHandler = withAuth(
+      { secret: SECRET, cookieName: 'access_token' },
+      async (_req, { session }) => Response.json({ ok: true, userId: session.userId }),
     );
     const req = new Request('https://example.com/api/me', {
       headers: { cookie: `access_token=${token}` },
@@ -152,7 +153,9 @@ describe('createAuthMiddleware()', () => {
     if (opts.token) headers['authorization'] = `Bearer ${opts.token}`;
     if (opts.cookieToken) cookies['access_token'] = opts.cookieToken;
 
-    return new NextRequest(url, { headers, cookies } as RequestInit & { cookies?: Record<string, string> });
+    return new NextRequest(url, { headers, cookies } as RequestInit & {
+      cookies?: Record<string, string>;
+    });
   }
 
   it('allows request through when a valid Bearer token is present', async () => {

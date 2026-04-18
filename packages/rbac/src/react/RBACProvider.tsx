@@ -45,9 +45,5 @@ export function RBACProvider({ rbac, role, children }: RBACProviderProps) {
     [rbac, role],
   );
 
-  return (
-    <RBACContext.Provider value={value}>
-      {children}
-    </RBACContext.Provider>
-  );
+  return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;
 }

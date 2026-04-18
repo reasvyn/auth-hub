@@ -18,7 +18,12 @@ export interface TeamSwitcherProps {
  * @example
  * <TeamSwitcher showCreate onCreateClick={() => setShowCreateModal(true)} />
  */
-export function TeamSwitcher({ onSwitch, showCreate = true, onCreateClick, className = '' }: TeamSwitcherProps) {
+export function TeamSwitcher({
+  onSwitch,
+  showCreate = true,
+  onCreateClick,
+  className = '',
+}: TeamSwitcherProps) {
   const { currentTeam, teams, currentRole, switchTeam } = useTeam();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -44,7 +49,12 @@ export function TeamSwitcher({ onSwitch, showCreate = true, onCreateClick, class
         <span className="flex-1 text-left truncate">{currentTeam?.name ?? 'No team'}</span>
         {currentRole && <MemberRoleBadge role={currentRole} />}
         {/* Chevron */}
-        <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
@@ -70,7 +80,11 @@ export function TeamSwitcher({ onSwitch, showCreate = true, onCreateClick, class
                 <span className="flex-1 truncate">{team.name}</span>
                 {currentTeam?.id === team.id && (
                   <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 )}
               </button>
@@ -80,7 +94,10 @@ export function TeamSwitcher({ onSwitch, showCreate = true, onCreateClick, class
               <>
                 <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                 <button
-                  onClick={() => { setOpen(false); onCreateClick?.(); }}
+                  onClick={() => {
+                    setOpen(false);
+                    onCreateClick?.();
+                  }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <span className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400">

@@ -26,7 +26,11 @@ export class BruteForceProtection {
   /**
    * Record a failed attempt and check if the account should be locked
    */
-  recordFailedAttempt(identifier: string): { locked: boolean; attemptsRemaining: number; lockedUntil?: Date } {
+  recordFailedAttempt(identifier: string): {
+    locked: boolean;
+    attemptsRemaining: number;
+    lockedUntil?: Date;
+  } {
     const now = Date.now();
     const record = this.store.get(identifier) ?? { attempts: 0, lastAttemptAt: now };
 

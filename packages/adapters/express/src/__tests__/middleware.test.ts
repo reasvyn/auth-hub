@@ -31,7 +31,12 @@ function mockReq(overrides: Partial<Request> = {}): Request {
 }
 
 function mockRes(): Response & { _status: number; _body: unknown } {
-  const res: { _status: number; _body: unknown; status(code: number): typeof res; json(body: unknown): typeof res } = {
+  const res: {
+    _status: number;
+    _body: unknown;
+    status(code: number): typeof res;
+    json(body: unknown): typeof res;
+  } = {
     _status: 200,
     _body: null as unknown,
     status(code: number) {
@@ -47,7 +52,9 @@ function mockRes(): Response & { _status: number; _body: unknown } {
 }
 
 function mockNext(): NextFunction & { called: boolean } {
-  const fn = () => { fn.called = true; };
+  const fn = () => {
+    fn.called = true;
+  };
   fn.called = false;
   return fn as unknown as NextFunction & { called: boolean };
 }

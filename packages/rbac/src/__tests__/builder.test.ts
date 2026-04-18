@@ -56,9 +56,9 @@ describe('defineRoles() / RoleBuilder', () => {
   });
 
   it('.extend() throws when role does not exist', () => {
-    expect(() =>
-      defineRoles().extend('nonexistent', { permissions: ['x:y'] }),
-    ).toThrow('[auth-rbac] Cannot extend unknown role "nonexistent".');
+    expect(() => defineRoles().extend('nonexistent', { permissions: ['x:y'] })).toThrow(
+      '[auth-rbac] Cannot extend unknown role "nonexistent".',
+    );
   });
 
   it('.toConfig() returns a deep clone of the role config', () => {

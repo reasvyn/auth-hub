@@ -193,7 +193,7 @@ describe('outranks()', () => {
     ['admin', 'owner', false],
     ['member', 'admin', false],
     ['viewer', 'member', false],
-    ['owner', 'owner', false],   // equal, not outranking
+    ['owner', 'owner', false], // equal, not outranking
     ['member', 'member', false],
   ];
 

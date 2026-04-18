@@ -9,7 +9,10 @@ const DEFAULT_ROUNDS = 12;
 /**
  * Hash a plaintext password using bcrypt
  */
-export async function hashPassword(password: string, rounds: number = DEFAULT_ROUNDS): Promise<string> {
+export async function hashPassword(
+  password: string,
+  rounds: number = DEFAULT_ROUNDS,
+): Promise<string> {
   const salt = await bcrypt.genSalt(rounds);
   return bcrypt.hash(password, salt);
 }

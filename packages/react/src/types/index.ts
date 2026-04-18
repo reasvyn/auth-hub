@@ -115,7 +115,10 @@ export interface MFASetupFormProps {
 
 export interface MFAVerifyFormProps {
   method?: TwoFactorMethod;
-  onVerify?: (code: string, method: TwoFactorMethod) => Promise<AuthResponse | void> | AuthResponse | void;
+  onVerify?: (
+    code: string,
+    method: TwoFactorMethod,
+  ) => Promise<AuthResponse | void> | AuthResponse | void;
   onSuccess?: (response?: AuthResponse) => void;
   onError?: (error: string) => void;
   onBack?: () => void;

@@ -24,17 +24,28 @@ export interface NextAuthMiddlewareOptions {
 }
 
 // Minimal JWT verification for Edge runtime (no Node.js crypto module)
-async function verifyEdgeJWT(token: string, secret: string): Promise<Record<string, unknown> | null> {
+async function verifyEdgeJWT(
+  token: string,
+  secret: string,
+): Promise<Record<string, unknown> | null> {
   try {
     const [headerB64, payloadB64, signatureB64] = token.split('.');
     if (!headerB64 || !payloadB64 || !signatureB64) return null;
 
     const enc = new TextEncoder();
     const keyData = enc.encode(secret);
-    const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
 
     const data = enc.encode(`${headerB64}.${payloadB64}`);
-    const sig = Uint8Array.from(atob(signatureB64.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+    const sig = Uint8Array.from(atob(signatureB64.replace(/-/g, '+').replace(/_/g, '/')), (c) =>
+      c.charCodeAt(0),
+    );
 
     const valid = await crypto.subtle.verify('HMAC', key, sig, data);
     if (!valid) return null;
@@ -50,11 +61,7 @@ async function verifyEdgeJWT(token: string, secret: string): Promise<Record<stri
 }
 
 export function createAuthMiddleware(options: NextAuthMiddlewareOptions) {
-  const {
-    secret,
-    loginPath = '/login',
-    cookieName = 'access_token',
-  } = options;
+  const { secret, loginPath = '/login', cookieName = 'access_token' } = options;
 
   return async function middleware(request: NextRequest): Promise<NextResponse> {
     // Try to get token from cookie or Authorization header

@@ -40,7 +40,10 @@ export function requireAuth(options: AuthMiddlewareOptions): RequestHandler {
         options.onUnauthorized(req, res, 'No token provided');
         return;
       }
-      res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+      res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+      });
       return;
     }
 
@@ -84,11 +87,16 @@ export function optionalAuth(options: AuthMiddlewareOptions): RequestHandler {
 export function requireRole(...roles: JWTPayload['role'][]): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.auth) {
-      res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
+      res
+        .status(401)
+        .json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
       return;
     }
     if (!roles.includes(req.auth.role)) {
-      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Insufficient permissions' } });
+      res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Insufficient permissions' },
+      });
       return;
     }
     next();

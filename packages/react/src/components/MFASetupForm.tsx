@@ -19,8 +19,7 @@ export function MFASetupForm({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const methodLabel =
-    method === 'totp' ? 'Authenticator App' : method === 'sms' ? 'SMS' : 'Email';
+  const methodLabel = method === 'totp' ? 'Authenticator App' : method === 'sms' ? 'SMS' : 'Email';
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

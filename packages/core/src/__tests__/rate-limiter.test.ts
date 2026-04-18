@@ -1,4 +1,8 @@
-import { RateLimiter, createLoginRateLimiter, createApiRateLimiter } from '../security/rate-limiter';
+import {
+  RateLimiter,
+  createLoginRateLimiter,
+  createApiRateLimiter,
+} from '../security/rate-limiter';
 
 describe('RateLimiter', () => {
   let limiter: RateLimiter;

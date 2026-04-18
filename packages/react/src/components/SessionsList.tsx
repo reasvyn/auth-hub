@@ -7,7 +7,12 @@ interface SessionsListComponentProps extends SessionsListProps {
   adapter: AuthAdapter;
 }
 
-export function SessionsList({ adapter, onRevoke, onRevokeAll, className }: SessionsListComponentProps) {
+export function SessionsList({
+  adapter,
+  onRevoke,
+  onRevokeAll,
+  className,
+}: SessionsListComponentProps) {
   const sessionState = useSession(adapter);
 
   const handleRevoke = async (id: string) => {
@@ -44,7 +49,9 @@ export function SessionsList({ adapter, onRevoke, onRevokeAll, className }: Sess
           <Spinner />
         </div>
       ) : sessionState.sessions.length === 0 ? (
-        <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-6">No active sessions found.</p>
+        <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-6">
+          No active sessions found.
+        </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {sessionState.sessions.map((session) => (
@@ -59,7 +66,9 @@ export function SessionsList({ adapter, onRevoke, onRevokeAll, className }: Sess
                   {session.device?.os ?? 'Unknown OS'}
                 </p>
                 {session.device?.ipAddress && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{session.device.ipAddress}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {session.device.ipAddress}
+                  </p>
                 )}
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   Last active:{' '}
@@ -75,9 +84,9 @@ export function SessionsList({ adapter, onRevoke, onRevokeAll, className }: Sess
               </div>
               <button
                 type="button"
-                  onClick={() => {
-                    void handleRevoke(session.id);
-                  }}
+                onClick={() => {
+                  void handleRevoke(session.id);
+                }}
                 className="shrink-0 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 underline cursor-pointer bg-transparent border-none"
               >
                 Revoke

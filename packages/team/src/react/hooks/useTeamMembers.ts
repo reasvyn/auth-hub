@@ -51,25 +51,36 @@ export function useTeamMembers(): UseTeamMembersReturn {
     }
   }, [adapter, currentTeam]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
-  const addMember = useCallback(async (userId: string, role: TeamRole) => {
-    if (!currentTeam) throw new Error('No active team');
-    const member = await adapter.addMember(currentTeam.id, userId, role);
-    setMembers((prev) => [...prev, member]);
-  }, [adapter, currentTeam]);
+  const addMember = useCallback(
+    async (userId: string, role: TeamRole) => {
+      if (!currentTeam) throw new Error('No active team');
+      const member = await adapter.addMember(currentTeam.id, userId, role);
+      setMembers((prev) => [...prev, member]);
+    },
+    [adapter, currentTeam],
+  );
 
-  const removeMember = useCallback(async (userId: string) => {
-    if (!currentTeam) throw new Error('No active team');
-    await adapter.removeMember(currentTeam.id, userId);
-    setMembers((prev) => prev.filter((m) => m.userId !== userId));
-  }, [adapter, currentTeam]);
+  const removeMember = useCallback(
+    async (userId: string) => {
+      if (!currentTeam) throw new Error('No active team');
+      await adapter.removeMember(currentTeam.id, userId);
+      setMembers((prev) => prev.filter((m) => m.userId !== userId));
+    },
+    [adapter, currentTeam],
+  );
 
-  const updateRole = useCallback(async (userId: string, role: TeamRole) => {
-    if (!currentTeam) throw new Error('No active team');
-    const updated = await adapter.updateMemberRole(currentTeam.id, userId, role);
-    setMembers((prev) => prev.map((m) => (m.userId === userId ? updated : m)));
-  }, [adapter, currentTeam]);
+  const updateRole = useCallback(
+    async (userId: string, role: TeamRole) => {
+      if (!currentTeam) throw new Error('No active team');
+      const updated = await adapter.updateMemberRole(currentTeam.id, userId, role);
+      setMembers((prev) => prev.map((m) => (m.userId === userId ? updated : m)));
+    },
+    [adapter, currentTeam],
+  );
 
   return {
     members,
@@ -78,8 +89,8 @@ export function useTeamMembers(): UseTeamMembersReturn {
     addMember,
     removeMember,
     updateRole,
-    canRemove: (targetRole) => currentRole ? canRemoveMember(currentRole, targetRole) : false,
-    canChangeRoleTo: (cur, next) => currentRole ? canChangeRole(currentRole, cur, next) : false,
+    canRemove: (targetRole) => (currentRole ? canRemoveMember(currentRole, targetRole) : false),
+    canChangeRoleTo: (cur, next) => (currentRole ? canChangeRole(currentRole, cur, next) : false),
     refresh,
   };
 }

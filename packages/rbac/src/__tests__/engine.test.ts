@@ -6,9 +6,26 @@ import type { RBACConfig } from '../types';
 const config: RBACConfig = {
   roles: [
     { name: 'super_admin', permissions: ['*'] },
-    { name: 'admin', permissions: ['users:*', 'content:*', 'billing:read'], inherits: ['moderator'] },
-    { name: 'moderator', permissions: ['content:read', 'content:update', 'comments:*'], inherits: ['user'] },
-    { name: 'user', permissions: ['profile:read', 'profile:update', 'content:read', 'comments:read', 'comments:create'] },
+    {
+      name: 'admin',
+      permissions: ['users:*', 'content:*', 'billing:read'],
+      inherits: ['moderator'],
+    },
+    {
+      name: 'moderator',
+      permissions: ['content:read', 'content:update', 'comments:*'],
+      inherits: ['user'],
+    },
+    {
+      name: 'user',
+      permissions: [
+        'profile:read',
+        'profile:update',
+        'content:read',
+        'comments:read',
+        'comments:create',
+      ],
+    },
     { name: 'viewer', permissions: ['content:read', 'profile:read'] },
   ],
 };
@@ -110,7 +127,9 @@ describe('hasAnyPermission', () => {
 
 describe('hasAllPermissions', () => {
   it('returns true when all permissions are granted', () => {
-    expect(engine.hasAllPermissions('admin', ['users:read', 'billing:read', 'content:read'])).toBe(true);
+    expect(engine.hasAllPermissions('admin', ['users:read', 'billing:read', 'content:read'])).toBe(
+      true,
+    );
   });
 
   it('returns false when any permission is missing', () => {
@@ -127,7 +146,12 @@ describe('hasAllPermissions', () => {
 describe('checkPermission', () => {
   it('returns granted:true with grantedBy for direct permission', () => {
     const result = engine.checkPermission('user', 'profile:read');
-    expect(result).toMatchObject({ granted: true, permission: 'profile:read', role: 'user', grantedBy: 'user' });
+    expect(result).toMatchObject({
+      granted: true,
+      permission: 'profile:read',
+      role: 'user',
+      grantedBy: 'user',
+    });
   });
 
   it('returns grantedBy the ancestor when inherited', () => {
@@ -188,7 +212,13 @@ describe('Introspection', () => {
 
   it('getRoles returns all role definitions', () => {
     const roles = engine.getRoles();
-    expect(roles.map((r) => r.name)).toEqual(['super_admin', 'admin', 'moderator', 'user', 'viewer']);
+    expect(roles.map((r) => r.name)).toEqual([
+      'super_admin',
+      'admin',
+      'moderator',
+      'user',
+      'viewer',
+    ]);
   });
 
   it('getRole returns the definition for a known role', () => {

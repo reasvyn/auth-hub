@@ -2,7 +2,13 @@
   "name": "@reasvyn/auth-node-sdk",
   "version": "0.1.0",
   "description": "Node.js SDK client for Auth-TS",
-  "keywords": ["auth", "authentication", "sdk", "typescript", "nodejs"],
+  "keywords": [
+    "auth",
+    "authentication",
+    "sdk",
+    "typescript",
+    "nodejs"
+  ],
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -14,7 +20,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "dev": "tsc --project tsconfig.build.json --watch",

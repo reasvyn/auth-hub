@@ -9,10 +9,7 @@ import type { CSRFToken } from '@reasvyn/auth-types';
 /**
  * Generate a CSRF token signed with a secret
  */
-export function generateCSRFToken(
-  secret: string,
-  expiresIn: number = 3600 * 1000,
-): CSRFToken {
+export function generateCSRFToken(secret: string, expiresIn: number = 3600 * 1000): CSRFToken {
   const random = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + expiresIn);
   const payload = `${random}:${expiresAt.getTime()}`;

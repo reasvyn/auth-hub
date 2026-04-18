@@ -8,7 +8,12 @@ import { TeamContext } from './TeamContext';
 
 type TeamAction =
   | { type: 'SET_LOADING' }
-  | { type: 'SET_TEAMS'; teams: Team[]; currentTeam: Team | null; currentRole: TeamState['currentRole'] }
+  | {
+      type: 'SET_TEAMS';
+      teams: Team[];
+      currentTeam: Team | null;
+      currentRole: TeamState['currentRole'];
+    }
   | { type: 'SET_CURRENT'; team: Team; role: TeamState['currentRole'] }
   | { type: 'UPSERT_TEAM'; team: Team }
   | { type: 'REMOVE_TEAM'; teamId: string }
@@ -43,12 +48,14 @@ function teamReducer(state: TeamState, action: TeamAction): TeamState {
       const teams = exists
         ? state.teams.map((t) => (t.id === action.team.id ? action.team : t))
         : [...state.teams, action.team];
-      const currentTeam = state.currentTeam?.id === action.team.id ? action.team : state.currentTeam;
+      const currentTeam =
+        state.currentTeam?.id === action.team.id ? action.team : state.currentTeam;
       return { ...state, teams, currentTeam };
     }
     case 'REMOVE_TEAM': {
       const teams = state.teams.filter((t) => t.id !== action.teamId);
-      const currentTeam = state.currentTeam?.id === action.teamId ? (teams[0] ?? null) : state.currentTeam;
+      const currentTeam =
+        state.currentTeam?.id === action.teamId ? (teams[0] ?? null) : state.currentTeam;
       return { ...state, teams, currentTeam };
     }
     case 'SET_ERROR':
@@ -102,11 +109,16 @@ export function TeamProvider({
         localStorage.setItem(storageKey, current.id);
       }
     } catch (err) {
-      dispatch({ type: 'SET_ERROR', error: err instanceof Error ? err.message : 'Failed to load teams' });
+      dispatch({
+        type: 'SET_ERROR',
+        error: err instanceof Error ? err.message : 'Failed to load teams',
+      });
     }
   }, [adapter, userId, storageKey]);
 
-  useEffect(() => { void refreshTeams(); }, [refreshTeams]);
+  useEffect(() => {
+    void refreshTeams();
+  }, [refreshTeams]);
 
   // ─── Switch team ─────────────────────────────────────────────────────
   const switchTeam = useCallback(

@@ -20,10 +20,7 @@ export interface MagicLinkToken {
 /**
  * Generate a magic link token for an email address
  */
-export function generateMagicLinkToken(
-  email: string,
-  options: MagicLinkOptions,
-): MagicLinkToken {
+export function generateMagicLinkToken(email: string, options: MagicLinkOptions): MagicLinkToken {
   const { secret, expiresIn = 15 * 60 * 1000, baseUrl } = options;
 
   const expiresAt = new Date(Date.now() + expiresIn);
@@ -32,9 +29,7 @@ export function generateMagicLinkToken(
   const signature = createHmac('sha256', secret).update(payload).digest('hex');
   const token = Buffer.from(`${payload}:${signature}`).toString('base64url');
 
-  const url = baseUrl
-    ? `${baseUrl}?token=${encodeURIComponent(token)}`
-    : undefined;
+  const url = baseUrl ? `${baseUrl}?token=${encodeURIComponent(token)}` : undefined;
 
   return {
     token,

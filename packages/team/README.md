@@ -54,21 +54,25 @@ export const teamAdapter: TeamAdapter = {
     await db.team.delete({ where: { id: teamId } });
   },
   listUserTeams: async (userId) => db.team.findMany({ where: { members: { some: { userId } } } }),
-  addMember: async (teamId, userId, role) => db.teamMember.create({ data: { teamId, userId, role } }),
+  addMember: async (teamId, userId, role) =>
+    db.teamMember.create({ data: { teamId, userId, role } }),
   removeMember: async (teamId, userId) => {
     await db.teamMember.delete({ where: { teamId_userId: { teamId, userId } } });
   },
   updateMemberRole: async (teamId, userId, role) =>
     db.teamMember.update({ where: { teamId_userId: { teamId, userId } }, data: { role } }),
   listMembers: async (teamId) => db.teamMember.findMany({ where: { teamId } }),
-  getMember: async (teamId, userId) => db.teamMember.findUnique({ where: { teamId_userId: { teamId, userId } } }),
+  getMember: async (teamId, userId) =>
+    db.teamMember.findUnique({ where: { teamId_userId: { teamId, userId } } }),
   createInvitation: async (data) => db.teamInvitation.create({ data }),
   getInvitationByToken: async (token) => db.teamInvitation.findUnique({ where: { token } }),
-  getInvitationById: async (invitationId) => db.teamInvitation.findUnique({ where: { id: invitationId } }),
+  getInvitationById: async (invitationId) =>
+    db.teamInvitation.findUnique({ where: { id: invitationId } }),
   updateInvitationStatus: async (invitationId, status) => {
     await db.teamInvitation.update({ where: { id: invitationId }, data: { status } });
   },
-  listInvitations: async (teamId, status) => db.teamInvitation.findMany({ where: { teamId, ...(status ? { status } : {}) } }),
+  listInvitations: async (teamId, status) =>
+    db.teamInvitation.findMany({ where: { teamId, ...(status ? { status } : {}) } }),
 };
 ```
 

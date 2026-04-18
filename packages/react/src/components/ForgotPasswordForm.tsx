@@ -6,7 +6,12 @@ import type { ForgotPasswordFormProps } from '../types';
 
 import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton } from './ui';
 
-export function ForgotPasswordForm({ onSuccess, onError, onBack, className }: ForgotPasswordFormProps) {
+export function ForgotPasswordForm({
+  onSuccess,
+  onError,
+  onBack,
+  className,
+}: ForgotPasswordFormProps) {
   const auth = useAuth();
   const { values, handleChange, submitting, setSubmitting } = useFormState({ email: '' });
   const [sent, setSent] = useState(false);

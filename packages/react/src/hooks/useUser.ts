@@ -18,10 +18,7 @@ interface UseUserReturn {
 export function useUser(): UseUserReturn {
   const { user, status } = useAuth();
 
-  const hasRole = useCallback(
-    (role: User['role']) => user?.role === role,
-    [user],
-  );
+  const hasRole = useCallback((role: User['role']) => user?.role === role, [user]);
 
   const hasPermission = useCallback(
     (_permission: string) => {

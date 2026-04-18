@@ -16,9 +16,15 @@ export interface TeamMembersListProps {
 /**
  * Full member management UI — list, change roles, remove members.
  */
-export function TeamMembersList({ currentUserId, onRemove, onRoleChange, className = '' }: TeamMembersListProps) {
+export function TeamMembersList({
+  currentUserId,
+  onRemove,
+  onRoleChange,
+  className = '',
+}: TeamMembersListProps) {
   const { currentRole } = useTeam();
-  const { members, isLoading, error, removeMember, updateRole, canRemove, canChangeRoleTo } = useTeamMembers();
+  const { members, isLoading, error, removeMember, updateRole, canRemove, canChangeRoleTo } =
+    useTeamMembers();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -32,7 +38,11 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
     }
   };
 
-  const handleRoleChange = async (userId: string, currentMemberRole: TeamRole, newRole: TeamRole) => {
+  const handleRoleChange = async (
+    userId: string,
+    currentMemberRole: TeamRole,
+    newRole: TeamRole,
+  ) => {
     if (!canChangeRoleTo(currentMemberRole, newRole)) return;
     setUpdatingId(userId);
     try {
@@ -53,7 +63,9 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
 
   if (error) {
     return (
-      <div className={`rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-600 dark:text-red-400 ${className}`}>
+      <div
+        className={`rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-600 dark:text-red-400 ${className}`}
+      >
         {error}
       </div>
     );
@@ -74,7 +86,9 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
           <div key={member.id} className="flex items-center gap-3 py-3">
             {/* Avatar */}
             <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
-              {member.user?.name?.charAt(0).toUpperCase() ?? member.user?.email?.charAt(0).toUpperCase() ?? '?'}
+              {member.user?.name?.charAt(0).toUpperCase() ??
+                member.user?.email?.charAt(0).toUpperCase() ??
+                '?'}
             </div>
 
             {/* Info */}
@@ -84,7 +98,9 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
                 {isSelf && <span className="ml-1 text-xs text-gray-400">(you)</span>}
               </p>
               {member.user?.email && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{member.user.email}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                  {member.user.email}
+                </p>
               )}
             </div>
 
@@ -93,7 +109,9 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
               <select
                 value={member.role}
                 disabled={updatingId === member.userId}
-                onChange={(e) => void handleRoleChange(member.userId, member.role, e.target.value as TeamRole)}
+                onChange={(e) =>
+                  void handleRoleChange(member.userId, member.role, e.target.value as TeamRole)
+                }
                 className="text-xs rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {TEAM_ROLES.filter((r) => r !== 'owner').map((r) => (
@@ -118,7 +136,12 @@ export function TeamMembersList({ currentUserId, onRemove, onRoleChange, classNa
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin" />
                 ) : (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 )}
               </button>

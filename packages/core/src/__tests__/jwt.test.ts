@@ -79,7 +79,9 @@ describe('createTokenPair', () => {
 
   it('refreshTokenExpiresAt > accessTokenExpiresAt', () => {
     const pair = createTokenPair(payload, SECRET, REFRESH_SECRET);
-    expect(pair.refreshTokenExpiresAt.getTime()).toBeGreaterThan(pair.accessTokenExpiresAt.getTime());
+    expect(pair.refreshTokenExpiresAt.getTime()).toBeGreaterThan(
+      pair.accessTokenExpiresAt.getTime(),
+    );
   });
 
   it('refresh token is verifiable with refresh secret', () => {

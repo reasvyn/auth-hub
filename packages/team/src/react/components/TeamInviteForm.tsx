@@ -16,7 +16,13 @@ export interface TeamInviteFormProps {
 /**
  * Invite a user by email with role selection, plus a list of pending invitations.
  */
-export function TeamInviteForm({ currentUserId, appBaseUrl, onInvited, onError, className = '' }: TeamInviteFormProps) {
+export function TeamInviteForm({
+  currentUserId,
+  appBaseUrl,
+  onInvited,
+  onError,
+  className = '',
+}: TeamInviteFormProps) {
   const { invitations, isLoading, invite, cancel } = useTeamInvitations(currentUserId);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<TeamRole>('member');
@@ -62,7 +68,9 @@ export function TeamInviteForm({ currentUserId, appBaseUrl, onInvited, onError, 
           className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           {TEAM_ROLES.filter((r) => r !== 'owner').map((r) => (
-            <option key={r} value={r}>{TEAM_ROLE_LABELS[r]}</option>
+            <option key={r} value={r}>
+              {TEAM_ROLE_LABELS[r]}
+            </option>
           ))}
         </select>
         <button
@@ -75,12 +83,8 @@ export function TeamInviteForm({ currentUserId, appBaseUrl, onInvited, onError, 
       </form>
 
       {/* Feedback */}
-      {success && (
-        <p className="mt-2 text-sm text-green-600 dark:text-green-400">{success}</p>
-      )}
-      {error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {success && <p className="mt-2 text-sm text-green-600 dark:text-green-400">{success}</p>}
+      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Pending invitations */}
       {invitations.length > 0 && (

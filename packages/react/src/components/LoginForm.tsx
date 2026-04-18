@@ -5,7 +5,17 @@ import { useFormState } from '../hooks/useUser';
 import type { LoginFormProps } from '../types';
 
 import { OAuthButton } from './OAuthButton';
-import { Card, Heading, Subheading, ErrorAlert, Field, Input, Button, TextButton, Divider } from './ui';
+import {
+  Card,
+  Heading,
+  Subheading,
+  ErrorAlert,
+  Field,
+  Input,
+  Button,
+  TextButton,
+  Divider,
+} from './ui';
 
 export function LoginForm({
   onSuccess,
@@ -15,7 +25,10 @@ export function LoginForm({
   className,
 }: LoginFormProps) {
   const auth = useAuth();
-  const { values, handleChange, submitting, setSubmitting } = useFormState({ email: '', password: '' });
+  const { values, handleChange, submitting, setSubmitting } = useFormState({
+    email: '',
+    password: '',
+  });
   const [magicLinkMode, setMagicLinkMode] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
@@ -45,10 +58,16 @@ export function LoginForm({
         <div className="text-center text-4xl mb-4">📬</div>
         <Heading>Check your email</Heading>
         <Subheading>
-          We sent a magic link to <strong className="text-gray-700 dark:text-gray-200">{values.email}</strong>.
-          Click the link to sign in.
+          We sent a magic link to{' '}
+          <strong className="text-gray-700 dark:text-gray-200">{values.email}</strong>. Click the
+          link to sign in.
         </Subheading>
-        <TextButton onClick={() => { setMagicLinkSent(false); setMagicLinkMode(false); }}>
+        <TextButton
+          onClick={() => {
+            setMagicLinkSent(false);
+            setMagicLinkMode(false);
+          }}
+        >
           Back to login
         </TextButton>
       </Card>
@@ -95,10 +114,7 @@ export function LoginForm({
             </Field>
           )}
 
-            <Button
-              type="submit"
-              loading={submitting || auth.status === 'loading'}
-            >
+          <Button type="submit" loading={submitting || auth.status === 'loading'}>
             {magicLinkMode ? 'Send Magic Link' : 'Sign in'}
           </Button>
         </form>
