@@ -23,6 +23,9 @@ export interface TokenMetadata {
   expiresAt: Date;
   issuedAt: Date;
   isRevoked: boolean;
+  sessionId?: string;
+  issuedByIpAddress?: string;
+  issuedToDeviceFingerprint?: string;
   revokedAt?: Date;
 }
 
@@ -33,6 +36,9 @@ export type TokenType =
   | 'email_verification'
   | 'password_reset'
   | 'mfa'
+  | 'otp'
+  | 'login_challenge'
+  | 'security_method_verification'
   | 'csrf';
 
 export interface TokenPair {

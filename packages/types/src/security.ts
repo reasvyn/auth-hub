@@ -2,8 +2,10 @@
  * Security-related type definitions
  */
 
+import type { UserStatus, TwoFactorMethod } from './user';
+
 export interface MFASetupData {
-  method: 'totp' | 'sms' | 'email';
+  method: TwoFactorMethod;
   secret?: string;
   qrCodeUrl?: string;
   backupCodes?: string[];
@@ -13,7 +15,79 @@ export interface MFASetupData {
 
 export interface MFAVerifyData {
   code: string;
-  method: 'totp' | 'sms' | 'email';
+  method: TwoFactorMethod;
+}
+
+export type SecurityMethodType = 'password' | 'totp' | 'email_otp' | 'sms_otp' | 'recovery_code';
+
+export type SecurityMethodStatus = 'pending' | 'enabled' | 'disabled' | 'locked' | 'compromised';
+
+export interface PasswordCredential {
+  userId: string;
+  email: string;
+  passwordHash: string;
+  passwordUpdatedAt: Date;
+  failedLoginAttempts: number;
+  requirePasswordChange?: boolean;
+  lockedUntil?: Date;
+  compromisedAt?: Date;
+}
+
+export interface UserSecurityMethod {
+  id: string;
+  userId: string;
+  type: SecurityMethodType;
+  status: SecurityMethodStatus;
+  label?: string;
+  isPrimary: boolean;
+  redactedDestination?: string;
+  verifiedAt?: Date;
+  lastUsedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RecoveryCode {
+  id: string;
+  hint: string;
+  createdAt: Date;
+  usedAt?: Date;
+}
+
+export type OneTimeCodePurpose =
+  | 'email_verification'
+  | 'password_reset'
+  | 'signin_challenge'
+  | 'mfa_challenge'
+  | 'security_method_enrollment'
+  | 'security_method_verification';
+
+export interface OneTimeCodeChallenge {
+  id: string;
+  purpose: OneTimeCodePurpose;
+  method: TwoFactorMethod;
+  userId?: string;
+  destination?: string;
+  expiresAt: Date;
+  attemptsRemaining: number;
+  verifiedAt?: Date;
+  createdAt: Date;
+  metadata?: Record<string, unknown>;
+}
+
+export interface UserSecurityOverview {
+  userId: string;
+  userStatus: UserStatus;
+  emailVerified: boolean;
+  passwordConfigured: boolean;
+  passwordLastChangedAt?: Date;
+  failedLoginAttempts: number;
+  lockedUntil?: Date;
+  methods: UserSecurityMethod[];
+  recoveryCodesRemaining: number;
+  lastSecurityReviewAt?: Date;
+  recommendations: string[];
 }
 
 export interface DeviceInfo {
@@ -40,6 +114,47 @@ export interface RateLimitInfo {
 export interface CSRFToken {
   token: string;
   expiresAt: Date;
+}
+
+export interface ConfigureSecurityMethodRequest {
+  method: SecurityMethodType;
+  label?: string;
+  destination?: string;
+  isPrimary?: boolean;
+}
+
+export interface VerifySecurityMethodRequest {
+  methodId: string;
+  code: string;
+  challengeId?: string;
+}
+
+export interface DisableSecurityMethodRequest {
+  methodId: string;
+  verificationCode?: string;
+  password?: string;
+}
+
+export interface RequestOneTimeCodeRequest {
+  purpose: OneTimeCodePurpose;
+  method: TwoFactorMethod;
+  destination?: string;
+  context?: Record<string, unknown>;
+}
+
+export interface VerifyOneTimeCodeRequest {
+  challengeId: string;
+  code: string;
+}
+
+export interface RegenerateRecoveryCodesRequest {
+  password: string;
+  verificationCode?: string;
+}
+
+export interface RegenerateRecoveryCodesResponse {
+  generatedAt: Date;
+  codes: string[];
 }
 
 export interface SecurityEvent {

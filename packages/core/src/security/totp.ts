@@ -2,10 +2,13 @@
  * 2FA/TOTP utilities using speakeasy
  */
 
-import speakeasy from 'speakeasy';
-import QRCode from 'qrcode';
-
 import type { MFASetupData } from '@reasvyn/auth-types';
+import * as QRCode from 'qrcode';
+import * as speakeasy from 'speakeasy';
+
+import { AUTH_CONSTANTS } from '../utils/constants';
+
+import { generateRecoveryCodes } from './credential-security';
 
 export interface TOTPOptions {
   issuer: string;
@@ -19,7 +22,13 @@ export interface TOTPOptions {
  * Generate a new TOTP secret and setup data
  */
 export async function generateTOTPSecret(options: TOTPOptions): Promise<MFASetupData> {
-  const { issuer, accountName, digits = 6, period = 30, algorithm = 'sha1' } = options;
+  const {
+    issuer,
+    accountName,
+    digits = AUTH_CONSTANTS.TOTP_DIGITS,
+    period = AUTH_CONSTANTS.TOTP_PERIOD,
+    algorithm = 'sha1',
+  } = options;
 
   const secret = speakeasy.generateSecret({
     name: `${issuer}:${accountName}`,
@@ -57,7 +66,11 @@ export function verifyTOTPCode(
   secret: string,
   options: { window?: number; digits?: number; period?: number } = {},
 ): boolean {
-  const { window = 1, digits = 6, period = 30 } = options;
+  const {
+    window = AUTH_CONSTANTS.TOTP_WINDOW,
+    digits = AUTH_CONSTANTS.TOTP_DIGITS,
+    period = AUTH_CONSTANTS.TOTP_PERIOD,
+  } = options;
 
   return speakeasy.totp.verify({
     secret,
@@ -72,13 +85,10 @@ export function verifyTOTPCode(
 /**
  * Generate a one-time backup codes set
  */
-export function generateBackupCodes(count: number = 10): string[] {
-  const codes: string[] = [];
-  for (let i = 0; i < count; i++) {
-    // Format: XXXXX-XXXXX
-    const part1 = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const part2 = Math.random().toString(36).substring(2, 7).toUpperCase();
-    codes.push(`${part1}-${part2}`);
-  }
-  return codes;
+export function generateBackupCodes(count: number = AUTH_CONSTANTS.BACKUP_CODE_COUNT): string[] {
+  return generateRecoveryCodes({
+    count,
+    segments: AUTH_CONSTANTS.RECOVERY_CODE_SEGMENTS,
+    segmentLength: AUTH_CONSTANTS.RECOVERY_CODE_SEGMENT_LENGTH,
+  });
 }

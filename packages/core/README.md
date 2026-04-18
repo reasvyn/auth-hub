@@ -12,6 +12,7 @@ The package does not depend on a web framework. Instead, higher-level packages s
 
 - Password hashing and verification
 - JWT creation, verification, and token-pair generation
+- Credential security helpers for OTP challenges, recovery codes, and user security overviews
 - Magic link and email verification token utilities
 - MFA/TOTP generation and verification
 - Validation helpers and structured runtime errors
@@ -46,11 +47,7 @@ npm install @reasvyn/auth-core
 ### 2. Hash Passwords and Create Tokens
 
 ```ts
-import {
-  hashPassword,
-  verifyPassword,
-  createTokenPair,
-} from '@reasvyn/auth-core';
+import { hashPassword, verifyPassword, createTokenPair } from '@reasvyn/auth-core';
 
 const passwordHash = await hashPassword('StrongPassword123!');
 const isValid = await verifyPassword('StrongPassword123!', passwordHash);
@@ -89,6 +86,7 @@ if (result.valid) {
 - `auth/email-verification`
 - `auth/oauth`
 - `security/password`
+- `security/credential-security`
 - `security/rate-limiter`
 - `security/csrf`
 - `security/totp`
@@ -125,11 +123,7 @@ try {
 Typical password flow:
 
 ```ts
-import {
-  hashPassword,
-  verifyPassword,
-  validatePasswordStrength,
-} from '@reasvyn/auth-core';
+import { hashPassword, verifyPassword, validatePasswordStrength } from '@reasvyn/auth-core';
 
 const strength = validatePasswordStrength('StrongPassword123!');
 if (!strength.isValid) {
@@ -156,6 +150,42 @@ const payload = verifyJWT(token, process.env.JWT_ACCESS_SECRET!);
 ### TOTP Utilities
 
 `generateTOTPSecret()` returns setup data suitable for enrollment screens, while `verifyTOTPCode()` validates user input during setup or login.
+
+### Credential Security Utilities
+
+Use `credential-security` helpers when you need secure building blocks for built-in credential auth without re-implementing cryptographic primitives:
+
+```ts
+import {
+  createOneTimeCodeChallenge,
+  createUserSecurityOverview,
+  generateOneTimeCode,
+  generateRecoveryCodes,
+  hashOneTimeCode,
+} from '@reasvyn/auth-core';
+
+const code = generateOneTimeCode();
+const codeHash = hashOneTimeCode(code, { secret: process.env.OTP_SECRET! });
+
+const challenge = createOneTimeCodeChallenge({
+  purpose: 'password_reset',
+  method: 'email',
+  userId: 'user_1',
+  destination: 'user@example.com',
+});
+
+const recoveryCodes = generateRecoveryCodes();
+
+const overview = createUserSecurityOverview({
+  userId: 'user_1',
+  userStatus: 'active',
+  emailVerified: true,
+  passwordConfigured: true,
+  passwordLastChangedAt: new Date(),
+  methods: [],
+  recoveryCodesRemaining: recoveryCodes.length,
+});
+```
 
 ### Validation Helpers
 

@@ -15,6 +15,7 @@ export * from './security/password';
 export * from './security/rate-limiter';
 export * from './security/csrf';
 export * from './security/totp';
+export * from './security/credential-security';
 export * from './security/brute-force';
 
 // Utility helpers

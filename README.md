@@ -10,20 +10,20 @@ A modular TypeScript authentication monorepo for building reusable auth foundati
 
 Auth-TS is designed as a package-first authentication toolkit. Instead of shipping one tightly coupled app, this repository provides modular packages that can be used independently or combined depending on your stack.
 
-The monorepo currently covers shared types, auth core utilities, React UI, a Node.js SDK, Express and Next.js adapters, RBAC, and team management primitives. The repository is library-first and does not currently include a tracked production app or docs site.
+The monorepo currently covers shared types, auth core utilities, React UI, a Node.js SDK, Express and Next.js adapters, RBAC, team management primitives, and a built-in credential auth foundation for password credentials, one-time-code challenges, recovery codes, and user security methods. The repository is library-first and does not currently include a tracked production app or docs site.
 
 ### Available Packages
 
-| Package | Description | Version |
-|---------|-------------|---------|
-| [`@reasvyn/auth-types`](./packages/types) | Shared TypeScript type definitions | 0.1.0 |
-| [`@reasvyn/auth-core`](./packages/core) | Framework-agnostic authentication primitives | 0.1.0 |
-| [`@reasvyn/auth-react`](./packages/react) | React components, hooks, and auth context | 0.1.0 |
-| [`@reasvyn/auth-node-sdk`](./packages/node-sdk) | Fetch-based SDK for auth-compatible APIs | 0.1.0 |
-| [`@reasvyn/auth-express`](./packages/adapters/express) | Express middleware and ready-to-mount auth router | 0.1.0 |
-| [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs) | Next.js client, server, and Edge auth helpers | 0.1.0 |
-| [`@reasvyn/auth-rbac`](./packages/rbac) | Role-based access control engine and bindings | 0.1.0 |
-| [`@reasvyn/auth-team`](./packages/team) | Team, invitation, and multi-tenant collaboration module | 0.1.0 |
+| Package                                                | Description                                             | Version |
+| ------------------------------------------------------ | ------------------------------------------------------- | ------- |
+| [`@reasvyn/auth-types`](./packages/types)              | Shared TypeScript type definitions                      | 0.1.0   |
+| [`@reasvyn/auth-core`](./packages/core)                | Framework-agnostic authentication primitives            | 0.1.0   |
+| [`@reasvyn/auth-react`](./packages/react)              | React components, hooks, and auth context               | 0.1.0   |
+| [`@reasvyn/auth-node-sdk`](./packages/node-sdk)        | Fetch-based SDK for auth-compatible APIs                | 0.1.0   |
+| [`@reasvyn/auth-express`](./packages/adapters/express) | Express middleware and ready-to-mount auth router       | 0.1.0   |
+| [`@reasvyn/auth-nextjs`](./packages/adapters/nextjs)   | Next.js client, server, and Edge auth helpers           | 0.1.0   |
+| [`@reasvyn/auth-rbac`](./packages/rbac)                | Role-based access control engine and bindings           | 0.1.0   |
+| [`@reasvyn/auth-team`](./packages/team)                | Team, invitation, and multi-tenant collaboration module | 0.1.0   |
 
 ### Repository Layout
 
@@ -51,6 +51,7 @@ auth-ts/
 - Express middleware and plug-and-play auth routes
 - Node.js SDK built on native `fetch`
 - Email/password authentication with bcrypt-based hashing
+- Credential auth foundation for password credentials, OTP challenges, recovery codes, and user security methods
 - Magic link and email verification utilities
 - JWT access and refresh token flows
 - MFA/TOTP setup and verification support
@@ -85,9 +86,16 @@ The primary repository validation entrypoints are:
 
 ```bash
 npm run lint
+npm run format:check
 npm run type-check
 npm run test
 npm run build
+```
+
+To format supported source and documentation files across the repository, run:
+
+```bash
+npm run format
 ```
 
 ## Quick Start
@@ -159,11 +167,7 @@ import { createNextJsAdapter } from '@reasvyn/auth-nextjs/client';
 
 const adapter = createNextJsAdapter({ basePath: '/api/auth' });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
@@ -220,8 +224,7 @@ app.use(
         if (!stored || stored.expiresAt < new Date()) return null;
         return stored.userId;
       },
-      revokeRefreshToken: (token) =>
-        db.refreshTokens.delete({ where: { token } }),
+      revokeRefreshToken: (token) => db.refreshTokens.delete({ where: { token } }),
     },
   }),
 );

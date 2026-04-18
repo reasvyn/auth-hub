@@ -17,6 +17,7 @@ The package works in Node.js 18+ and any environment that provides `fetch`.
 
 - `AuthClient` entrypoint with typed submodules
 - Modular APIs for auth, users, sessions, and MFA
+- User security endpoints for credential methods, OTP challenges, recovery codes, and security events
 - Bearer token support through `setAccessToken()`
 - Native `fetch`-based transport with timeout support
 - Shared request and response contracts via `@reasvyn/auth-types`
@@ -130,6 +131,34 @@ interface AuthClientConfig {
 - `getById(userId)`
 - `updateUser(userId, data)`
 - `deleteUser(userId)`
+- `getSecurityOverview()`
+- `listSecurityMethods()`
+- `configureSecurityMethod(data)`
+- `verifySecurityMethod(methodId, data)`
+- `disableSecurityMethod(methodId, data?)`
+- `requestOneTimeCode(data)`
+- `verifyOneTimeCode(data)`
+- `regenerateRecoveryCodes(data)`
+- `listSecurityEvents(params?)`
+
+### Credential Security Flows
+
+The `client.users` module also exposes security-management endpoints for account settings and step-up verification flows:
+
+```ts
+const overview = await client.users.getSecurityOverview();
+
+const challenge = await client.users.requestOneTimeCode({
+  purpose: 'security_method_verification',
+  method: 'email',
+  destination: 'user@example.com',
+});
+
+await client.users.verifyOneTimeCode({
+  challengeId: challenge.id,
+  code: '123456',
+});
+```
 
 ### `client.sessions`
 

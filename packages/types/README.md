@@ -12,6 +12,7 @@ Use this package when you want your application code, adapters, SDK integration,
 
 - Shared contracts for `User`, `AuthResponse`, `ActiveSession`, and `JWTPayload`
 - Type-safe request and response models for auth flows
+- Credential-auth contracts for password credentials, OTP challenges, recovery codes, and security method management
 - Shared API error and response envelope types
 - Centralized auth-related TypeScript types
 - Security-oriented types for MFA, rate limiting, CSRF, and audit-style metadata
@@ -78,15 +79,19 @@ The package re-exports all definitions from:
 
 ### Commonly Used Types
 
-| Type | Purpose |
-|------|---------|
-| `User` | Canonical user record with `profile?` and `settings?` |
-| `RegisterCredentials` | Registration input including `displayName?`, `firstName?`, `lastName?`, `confirmPassword?`, `acceptTerms?` |
-| `AuthResponse` | Auth result shape with `user?`, `session?`, `requiresMfa?`, `mfaToken?`, `error?` |
-| `AuthSession` | Session payload carrying `accessToken`, optional `refreshToken`, `expiresAt`, and `tokenType` |
-| `ActiveSession` | Lightweight active-session view for UI and API responses |
-| `JWTPayload` | JWT claim shape used by adapters and middleware |
-| `AuthError` | Serialized error payload structure, not the runtime `Error` class from `@reasvyn/auth-core` |
+| Type                   | Purpose                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `User`                 | Canonical user record with `profile?` and `settings?`                                                      |
+| `RegisterCredentials`  | Registration input including `displayName?`, `firstName?`, `lastName?`, `confirmPassword?`, `acceptTerms?` |
+| `AuthResponse`         | Auth result shape with `user?`, `session?`, `requiresMfa?`, `mfaToken?`, `error?`                          |
+| `AuthSession`          | Session payload carrying `accessToken`, optional `refreshToken`, `expiresAt`, and `tokenType`              |
+| `ActiveSession`        | Lightweight active-session view for UI and API responses                                                   |
+| `JWTPayload`           | JWT claim shape used by adapters and middleware                                                            |
+| `AuthError`            | Serialized error payload structure, not the runtime `Error` class from `@reasvyn/auth-core`                |
+| `PasswordCredential`   | Stored credential state for password-based sign-in, including lock and compromise metadata                 |
+| `UserSecurityMethod`   | Normalized record for enabled, pending, disabled, or locked security methods                               |
+| `OneTimeCodeChallenge` | OTP challenge state for email, SMS, sign-in, reset, and verification flows                                 |
+| `UserSecurityOverview` | Aggregated security posture summary for account settings and admin review screens                          |
 
 ### User Model Notes
 
@@ -111,6 +116,16 @@ This means integrations should prefer `user.profile?.displayName` instead of old
 ### Session Model Notes
 
 For session UIs and list endpoints, the current lightweight contract is `ActiveSession[]`, not the older full `Session[]` pattern for every screen.
+
+### Credential Security Model
+
+The `security` module now includes a shared baseline for built-in credential auth:
+
+- `PasswordCredential` for persisted password state, lock windows, and forced rotation
+- `SecurityMethodType` / `SecurityMethodStatus` for consistent method lifecycle handling
+- `ConfigureSecurityMethodRequest`, `VerifySecurityMethodRequest`, and `DisableSecurityMethodRequest` for enrollment flows
+- `RequestOneTimeCodeRequest` and `VerifyOneTimeCodeRequest` for challenge-based verification
+- `RecoveryCode` and `RegenerateRecoveryCodesResponse` for recovery workflows
 
 ## License
 

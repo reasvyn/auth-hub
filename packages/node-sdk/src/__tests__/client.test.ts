@@ -59,7 +59,10 @@ describe('AuthClient', () => {
     mockFetch(200, { success: true, data: { id: 'u1' } });
     await client.users.me();
 
-    const calledHeaders = (global.fetch as jest.Mock).mock.calls[0][1].headers as Record<string, string>;
+    const calledHeaders = (global.fetch as jest.Mock).mock.calls[0][1].headers as Record<
+      string,
+      string
+    >;
     expect(calledHeaders['Authorization']).toBeUndefined();
   });
 });
@@ -108,9 +111,14 @@ describe('auth.login()', () => {
   });
 
   it('throws HttpError on 401', async () => {
-    mockFetch(401, { success: false, error: { code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' } });
+    mockFetch(401, {
+      success: false,
+      error: { code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' },
+    });
 
-    await expect(client.auth.login({ email: 'a@b.com', password: 'wrong' })).rejects.toThrow(HttpError);
+    await expect(client.auth.login({ email: 'a@b.com', password: 'wrong' })).rejects.toThrow(
+      HttpError,
+    );
     await expect(client.auth.login({ email: 'a@b.com', password: 'wrong' })).rejects.toMatchObject({
       status: 401,
       code: 'INVALID_CREDENTIALS',
@@ -182,6 +190,80 @@ describe('users.updateProfile()', () => {
     expect(global.fetch).toHaveBeenCalledWith(
       'https://auth.example.com/users/me/profile',
       expect.objectContaining({ method: 'PATCH' }),
+    );
+  });
+});
+
+describe('users.getSecurityOverview()', () => {
+  it('calls GET /users/me/security', async () => {
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
+    mockFetch(200, {
+      success: true,
+      data: {
+        userId: 'u1',
+        userStatus: 'active',
+        emailVerified: true,
+        passwordConfigured: true,
+        failedLoginAttempts: 0,
+        methods: [],
+        recoveryCodesRemaining: 8,
+        recommendations: [],
+      },
+    });
+
+    await client.users.getSecurityOverview();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://auth.example.com/users/me/security',
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+});
+
+describe('users.requestOneTimeCode()', () => {
+  it('calls POST /users/me/security/challenges', async () => {
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
+    mockFetch(200, {
+      success: true,
+      data: {
+        id: 'challenge_1',
+        purpose: 'mfa_challenge',
+        method: 'email',
+        expiresAt: new Date().toISOString(),
+        attemptsRemaining: 5,
+        createdAt: new Date().toISOString(),
+      },
+    });
+
+    await client.users.requestOneTimeCode({
+      purpose: 'mfa_challenge',
+      method: 'email',
+      destination: 'user@example.com',
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://auth.example.com/users/me/security/challenges',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+});
+
+describe('users.regenerateRecoveryCodes()', () => {
+  it('calls POST /users/me/security/recovery-codes', async () => {
+    const client = new AuthClient({ baseUrl: 'https://auth.example.com' });
+    mockFetch(200, {
+      success: true,
+      data: {
+        generatedAt: new Date().toISOString(),
+        codes: ['ABCDE-FGHIJ'],
+      },
+    });
+
+    await client.users.regenerateRecoveryCodes({ password: 'Password123!' });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://auth.example.com/users/me/security/recovery-codes',
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });
