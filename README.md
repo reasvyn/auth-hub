@@ -197,7 +197,7 @@ export default async function DashboardPage() {
 
 #### Option B: Express Backend
 
-Mount the auth router:
+Mount the router at the application root so it can expose both `/auth/*` and `/users/me/security/*` endpoints:
 
 ```ts
 import express from 'express';
@@ -207,13 +207,13 @@ const app = express();
 app.use(express.json());
 
 app.use(
-  '/auth',
   createAuthRouter({
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET!,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET!,
     hmacSecret: process.env.HMAC_SECRET!,
     appBaseUrl: 'https://myapp.com',
     services: {
+      findUserById: (id) => db.users.findUnique({ where: { id } }),
       findUserByEmail: (email) => db.users.findUnique({ where: { email } }),
       createUser: (data) => db.users.create({ data }),
       updateUser: (id, data) => db.users.update({ where: { id }, data }),
@@ -225,6 +225,15 @@ app.use(
         return stored.userId;
       },
       revokeRefreshToken: (token) => db.refreshTokens.delete({ where: { token } }),
+      storeOneTimeCodeChallenge: (challenge) =>
+        db.oneTimeCodeChallenges.create({ data: challenge }),
+      findOneTimeCodeChallenge: (id) => db.oneTimeCodeChallenges.findUnique({ where: { id } }),
+      updateOneTimeCodeChallenge: (id, data) =>
+        db.oneTimeCodeChallenges.update({ where: { id }, data }),
+      createSecurityEvent: (event) => db.securityEvents.create({ data: event }),
+      sendOneTimeCode: async ({ destination, code }) => {
+        await mailer.sendOtp({ to: destination, code });
+      },
     },
   }),
 );

@@ -2,9 +2,8 @@
  * Validation helper utilities using zod
  */
 
-import { z } from 'zod';
-
 import type { ValidationError } from '@reasvyn/auth-types';
+import { z } from 'zod';
 
 export const emailSchema = z.string().email('Invalid email address').toLowerCase();
 
@@ -44,6 +43,32 @@ export const changePasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
+
+const oneTimeCodePurposeSchema = z.enum([
+  'email_verification',
+  'password_reset',
+  'signin_challenge',
+  'mfa_challenge',
+  'security_method_enrollment',
+  'security_method_verification',
+]);
+
+const twoFactorMethodSchema = z.enum(['totp', 'sms', 'email']);
+
+export const requestOneTimeCodeSchema = z.object({
+  purpose: oneTimeCodePurposeSchema,
+  method: twoFactorMethodSchema,
+  destination: z.string().trim().min(1).max(320).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const verifyOneTimeCodeSchema = z.object({
+  challengeId: z.string().trim().min(1, 'Challenge ID is required'),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6,8}$/, 'One-time code must contain 6 to 8 digits'),
+});
 
 /**
  * Convert zod errors to ValidationError array

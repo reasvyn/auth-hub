@@ -72,8 +72,18 @@ export interface OneTimeCodeChallenge {
   expiresAt: Date;
   attemptsRemaining: number;
   verifiedAt?: Date;
+  consumedAt?: Date;
   createdAt: Date;
   metadata?: Record<string, unknown>;
+}
+
+export interface StoredOneTimeCodeChallenge extends Omit<
+  OneTimeCodeChallenge,
+  'userId' | 'destination'
+> {
+  userId: string;
+  destination: string;
+  codeHash: string;
 }
 
 export interface UserSecurityOverview {
@@ -178,6 +188,10 @@ export type SecurityEventType =
   | 'mfa_enabled'
   | 'mfa_disabled'
   | 'mfa_failed'
+  | 'otp_challenge_requested'
+  | 'otp_challenge_verified'
+  | 'otp_challenge_failed'
+  | 'otp_challenge_expired'
   | 'suspicious_activity'
   | 'account_locked'
   | 'account_unlocked'

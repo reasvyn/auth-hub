@@ -1,23 +1,43 @@
 import {
   Errors,
+  createOneTimeCodeChallenge,
   createTokenPair,
   generateEmailVerificationToken,
   generateMagicLinkToken,
+  generateOneTimeCode,
   hashPassword,
+  hashOneTimeCode,
   isAuthError,
   loginSchema,
+  redactDestination,
+  requestOneTimeCodeSchema,
   registerSchema,
   safeValidate,
+  verifyOneTimeCodeHash,
+  verifyOneTimeCodeSchema,
+  zodToValidationErrors,
   verifyEmailVerificationToken,
   verifyMagicLinkToken,
   verifyJWT,
   verifyPassword,
 } from '@reasvyn/auth-core';
-import type { User } from '@reasvyn/auth-types';
+import type {
+  OneTimeCodeChallenge,
+  SecurityEvent,
+  StoredOneTimeCodeChallenge,
+  User,
+} from '@reasvyn/auth-types';
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 
+import { requireAuth } from './middleware';
+
 export interface AuthRouterServices {
+  /**
+   * Find a user by id. Return null if not found.
+   */
+  findUserById(userId: string): Promise<User | null>;
+
   /**
    * Find a user by email. Return null if not found.
    */
@@ -49,6 +69,34 @@ export interface AuthRouterServices {
   revokeRefreshToken(token: string): Promise<void>;
 
   /**
+   * Store a one-time-code challenge in persistent storage.
+   */
+  storeOneTimeCodeChallenge(challenge: StoredOneTimeCodeChallenge): Promise<void>;
+
+  /**
+   * Find a stored one-time-code challenge by id.
+   */
+  findOneTimeCodeChallenge(challengeId: string): Promise<StoredOneTimeCodeChallenge | null>;
+
+  /**
+   * Update the mutable state of a stored one-time-code challenge.
+   */
+  updateOneTimeCodeChallenge(
+    challengeId: string,
+    data: Partial<StoredOneTimeCodeChallenge>,
+  ): Promise<StoredOneTimeCodeChallenge>;
+
+  /**
+   * Record a security event in persistent storage.
+   */
+  createSecurityEvent(event: SecurityEvent): Promise<void>;
+
+  /**
+   * Deliver the generated one-time code to the destination.
+   */
+  sendOneTimeCode(data: OneTimeCodeDelivery): Promise<void>;
+
+  /**
    * Send email verification to user (you implement the delivery).
    */
   sendEmailVerification?(user: User, token: string, url: string): Promise<void>;
@@ -62,6 +110,13 @@ export interface AuthRouterServices {
    * Send password reset email.
    */
   sendPasswordResetEmail?(user: User, token: string, url: string): Promise<void>;
+}
+
+export interface OneTimeCodeDelivery {
+  user: User;
+  code: string;
+  destination: string;
+  challenge: OneTimeCodeChallenge;
 }
 
 export interface AuthRouterConfig {
@@ -109,6 +164,31 @@ function sanitizeUserForResponse(user: User): User {
   return safeUser;
 }
 
+function getRequestMetadata(req: Request): Pick<SecurityEvent, 'ipAddress' | 'userAgent'> {
+  return {
+    ...(req.ip ? { ipAddress: req.ip } : {}),
+    ...(typeof req.headers['user-agent'] === 'string'
+      ? { userAgent: req.headers['user-agent'] }
+      : {}),
+  };
+}
+
+function toPublicOneTimeCodeChallenge(challenge: StoredOneTimeCodeChallenge): OneTimeCodeChallenge {
+  return {
+    id: challenge.id,
+    purpose: challenge.purpose,
+    method: challenge.method,
+    userId: challenge.userId,
+    destination: redactDestination(challenge.destination),
+    expiresAt: challenge.expiresAt,
+    attemptsRemaining: challenge.attemptsRemaining,
+    ...(challenge.verifiedAt ? { verifiedAt: challenge.verifiedAt } : {}),
+    ...(challenge.consumedAt ? { consumedAt: challenge.consumedAt } : {}),
+    createdAt: challenge.createdAt,
+    ...(challenge.metadata ? { metadata: challenge.metadata } : {}),
+  };
+}
+
 export function createAuthRouter(config: AuthRouterConfig) {
   const router: Router = Router();
 
@@ -116,7 +196,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/register
   router.post(
-    '/register',
+    '/auth/register',
     runRoute(async (req: Request, res: Response) => {
       const result = safeValidate(registerSchema, req.body as unknown);
       if (!result.success) {
@@ -175,7 +255,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/login
   router.post(
-    '/login',
+    '/auth/login',
     runRoute(async (req: Request, res: Response) => {
       const result = safeValidate(loginSchema, req.body as unknown);
       if (!result.success) {
@@ -221,7 +301,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/logout
   router.post(
-    '/logout',
+    '/auth/logout',
     runRoute(async (req: Request, res: Response) => {
       const { refreshToken } = req.body as { refreshToken?: string };
       if (refreshToken) {
@@ -235,7 +315,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/refresh
   router.post(
-    '/refresh',
+    '/auth/refresh',
     runRoute(async (req: Request, res: Response) => {
       const { refreshToken } = req.body as { refreshToken?: string };
       if (!refreshToken) {
@@ -279,7 +359,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/email/send-verification
   router.post(
-    '/email/send-verification',
+    '/auth/email/send-verification',
     runRoute(async (req: Request, res: Response) => {
       const { userId, email } = req.body as { userId?: string; email?: string };
       if (!userId || !email) {
@@ -306,7 +386,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/email/verify
   router.post(
-    '/email/verify',
+    '/auth/email/verify',
     runRoute(async (req: Request, res: Response) => {
       const { token } = req.body as { token?: string };
       if (!token) {
@@ -329,7 +409,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/magic-link
   router.post(
-    '/magic-link',
+    '/auth/magic-link',
     runRoute(async (req: Request, res: Response) => {
       const { email } = req.body as { email?: string };
       if (!email) {
@@ -356,7 +436,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/magic-link/verify
   router.post(
-    '/magic-link/verify',
+    '/auth/magic-link/verify',
     runRoute(async (req: Request, res: Response) => {
       const { token } = req.body as { token?: string };
       if (!token) {
@@ -396,7 +476,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/password/reset
   router.post(
-    '/password/reset',
+    '/auth/password/reset',
     runRoute(async (req: Request, res: Response) => {
       const { email } = req.body as { email?: string };
       if (!email) {
@@ -426,7 +506,7 @@ export function createAuthRouter(config: AuthRouterConfig) {
 
   // POST /auth/password/reset/confirm
   router.post(
-    '/password/reset/confirm',
+    '/auth/password/reset/confirm',
     runRoute(async (req: Request, res: Response) => {
       const { token, newPassword } = req.body as { token?: string; newPassword?: string };
       if (!token || !newPassword) {
@@ -451,6 +531,235 @@ export function createAuthRouter(config: AuthRouterConfig) {
       } catch (err) {
         sendError(res, err, 400);
       }
+    }),
+  );
+
+  router.use('/users/me/security', requireAuth({ secret: jwtAccessSecret }));
+
+  // POST /users/me/security/challenges
+  router.post(
+    '/users/me/security/challenges',
+    runRoute(async (req: Request, res: Response) => {
+      const result = requestOneTimeCodeSchema.safeParse(req.body as unknown);
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: zodToValidationErrors(result.error),
+          },
+        });
+        return;
+      }
+
+      const authenticatedUserId = req.auth?.sub;
+      if (!authenticatedUserId) {
+        sendError(res, Errors.unauthorized('Authentication required'), 401);
+        return;
+      }
+
+      const user = await services.findUserById(authenticatedUserId);
+      if (!user) {
+        sendError(res, Errors.notFound('User'), 404);
+        return;
+      }
+
+      const payload = result.data;
+
+      if (payload.method === 'totp') {
+        sendError(
+          res,
+          Errors.forbidden('TOTP challenges must be verified locally by an authenticator app'),
+          403,
+        );
+        return;
+      }
+
+      const destination =
+        payload.destination ??
+        (payload.method === 'email' ? user.email : user.profile?.phoneNumber);
+
+      if (!destination) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'A verified email address or phone number is required for this challenge',
+          },
+        });
+        return;
+      }
+
+      const code = generateOneTimeCode();
+      const challenge = createOneTimeCodeChallenge({
+        purpose: payload.purpose,
+        method: payload.method,
+        userId: user.id,
+        destination,
+        ...(payload.context ? { metadata: payload.context } : {}),
+      });
+
+      const storedChallenge: StoredOneTimeCodeChallenge = {
+        ...challenge,
+        userId: user.id,
+        destination,
+        codeHash: hashOneTimeCode(code, { secret: hmacSecret }),
+      };
+
+      await services.storeOneTimeCodeChallenge(storedChallenge);
+
+      try {
+        await services.sendOneTimeCode({
+          user,
+          code,
+          destination,
+          challenge,
+        });
+      } catch (error) {
+        await services.updateOneTimeCodeChallenge(storedChallenge.id, {
+          consumedAt: new Date(),
+        });
+        throw error;
+      }
+
+      await services.createSecurityEvent({
+        type: 'otp_challenge_requested',
+        userId: user.id,
+        timestamp: new Date(),
+        metadata: {
+          challengeId: storedChallenge.id,
+          purpose: storedChallenge.purpose,
+          method: storedChallenge.method,
+        },
+        ...getRequestMetadata(req),
+      });
+
+      sendSuccess(res, challenge, 201);
+    }),
+  );
+
+  // POST /users/me/security/challenges/verify
+  router.post(
+    '/users/me/security/challenges/verify',
+    runRoute(async (req: Request, res: Response) => {
+      const result = verifyOneTimeCodeSchema.safeParse(req.body as unknown);
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: zodToValidationErrors(result.error),
+          },
+        });
+        return;
+      }
+
+      const authenticatedUserId = req.auth?.sub;
+      if (!authenticatedUserId) {
+        sendError(res, Errors.unauthorized('Authentication required'), 401);
+        return;
+      }
+
+      const payload = result.data;
+      const challenge = await services.findOneTimeCodeChallenge(payload.challengeId);
+
+      if (!challenge || challenge.userId !== authenticatedUserId) {
+        sendError(res, Errors.notFound('One-time-code challenge'), 404);
+        return;
+      }
+
+      const eventMetadata = {
+        challengeId: challenge.id,
+        purpose: challenge.purpose,
+        method: challenge.method,
+      };
+
+      if (challenge.consumedAt) {
+        await services.createSecurityEvent({
+          type: 'otp_challenge_failed',
+          userId: challenge.userId,
+          timestamp: new Date(),
+          metadata: { ...eventMetadata, reason: 'already_used' },
+          ...getRequestMetadata(req),
+        });
+
+        sendSuccess(res, {
+          verified: false,
+          challenge: toPublicOneTimeCodeChallenge(challenge),
+        });
+        return;
+      }
+
+      const now = new Date();
+      if (challenge.expiresAt.getTime() <= now.getTime()) {
+        const expiredChallenge = await services.updateOneTimeCodeChallenge(challenge.id, {
+          consumedAt: now,
+        });
+
+        await services.createSecurityEvent({
+          type: 'otp_challenge_expired',
+          userId: challenge.userId,
+          timestamp: now,
+          metadata: eventMetadata,
+          ...getRequestMetadata(req),
+        });
+
+        sendSuccess(res, {
+          verified: false,
+          challenge: toPublicOneTimeCodeChallenge(expiredChallenge),
+        });
+        return;
+      }
+
+      const verified = verifyOneTimeCodeHash(payload.code, challenge.codeHash, {
+        secret: hmacSecret,
+      });
+
+      if (!verified) {
+        const nextAttemptsRemaining = Math.max(0, challenge.attemptsRemaining - 1);
+        const failedChallenge = await services.updateOneTimeCodeChallenge(challenge.id, {
+          attemptsRemaining: nextAttemptsRemaining,
+          ...(nextAttemptsRemaining === 0 ? { consumedAt: now } : {}),
+        });
+
+        await services.createSecurityEvent({
+          type: 'otp_challenge_failed',
+          userId: challenge.userId,
+          timestamp: now,
+          metadata: {
+            ...eventMetadata,
+            reason: 'invalid_code',
+            attemptsRemaining: failedChallenge.attemptsRemaining,
+          },
+          ...getRequestMetadata(req),
+        });
+
+        sendSuccess(res, {
+          verified: false,
+          challenge: toPublicOneTimeCodeChallenge(failedChallenge),
+        });
+        return;
+      }
+
+      const verifiedChallenge = await services.updateOneTimeCodeChallenge(challenge.id, {
+        verifiedAt: now,
+        consumedAt: now,
+      });
+
+      await services.createSecurityEvent({
+        type: 'otp_challenge_verified',
+        userId: challenge.userId,
+        timestamp: now,
+        metadata: eventMetadata,
+        ...getRequestMetadata(req),
+      });
+
+      sendSuccess(res, {
+        verified: true,
+        challenge: toPublicOneTimeCodeChallenge(verifiedChallenge),
+      });
     }),
   );
 

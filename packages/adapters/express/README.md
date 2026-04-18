@@ -4,7 +4,7 @@ Express middleware and ready-to-mount auth router for Auth-TS.
 
 ## Overview
 
-`@reasvyn/auth-express` provides the Express integration layer for Auth-TS. It exposes middleware for authentication and role checks, plus `createAuthRouter()` for common auth flows such as register, login, refresh, magic link, email verification, and password reset.
+`@reasvyn/auth-express` provides the Express integration layer for Auth-TS. It exposes middleware for authentication and role checks, plus `createAuthRouter()` for common auth flows such as register, login, refresh, magic link, email verification, password reset, and authenticated one-time-code challenge flows.
 
 The package is service-driven: you provide the persistence and delivery functions, and the adapter handles routing, validation, token issuance, and JSON response envelopes.
 
@@ -50,13 +50,13 @@ const app = express();
 app.use(express.json());
 
 app.use(
-  '/auth',
   createAuthRouter({
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET!,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET!,
     hmacSecret: process.env.HMAC_SECRET!,
     appBaseUrl: 'https://myapp.com',
     services: {
+      findUserById: (id) => db.users.findUnique({ where: { id } }),
       findUserByEmail: (email) => db.users.findUnique({ where: { email } }),
       createUser: (data) => db.users.create({ data }),
       updateUser: (id, data) => db.users.update({ where: { id }, data }),
@@ -68,6 +68,15 @@ app.use(
         return tokenRow.userId;
       },
       revokeRefreshToken: (token) => db.refreshTokens.delete({ where: { token } }),
+      storeOneTimeCodeChallenge: (challenge) =>
+        db.oneTimeCodeChallenges.create({ data: challenge }),
+      findOneTimeCodeChallenge: (id) => db.oneTimeCodeChallenges.findUnique({ where: { id } }),
+      updateOneTimeCodeChallenge: (id, data) =>
+        db.oneTimeCodeChallenges.update({ where: { id }, data }),
+      createSecurityEvent: (event) => db.securityEvents.create({ data: event }),
+      sendOneTimeCode: async ({ destination, code }) => {
+        await mailer.sendOtp({ to: destination, code });
+      },
     },
   }),
 );
@@ -122,12 +131,18 @@ req.auth?: JWTPayload & { token: string };
 
 Required responsibilities:
 
+- `findUserById(userId)`
 - `findUserByEmail(email)`
 - `createUser(data)`
 - `updateUser(userId, data)`
 - `storeRefreshToken(userId, token, expiresAt)`
 - `validateRefreshToken(token)`
 - `revokeRefreshToken(token)`
+- `storeOneTimeCodeChallenge(challenge)`
+- `findOneTimeCodeChallenge(challengeId)`
+- `updateOneTimeCodeChallenge(challengeId, data)`
+- `createSecurityEvent(event)`
+- `sendOneTimeCode({ user, destination, code, challenge })`
 
 Optional:
 
@@ -149,12 +164,23 @@ Errors return:
 { "success": false, "error": { "code": "UNAUTHORIZED", "message": "..." } }
 ```
 
+### OTP Challenge Routes
+
+When mounted at the application root, `createAuthRouter()` exposes both auth endpoints and authenticated OTP challenge endpoints:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /users/me/security/challenges`
+- `POST /users/me/security/challenges/verify`
+
 ### Security Notes
 
 - access tokens are short-lived
 - refresh tokens are rotated
 - magic link and password reset flows avoid obvious email enumeration behavior
 - auth responses are sanitized before sending user objects back to clients
+- OTP challenges are stored as hashes, expire automatically, decrement attempts on failure, and become single-use after success or exhaustion
 
 ## License
 

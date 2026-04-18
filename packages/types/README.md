@@ -79,19 +79,20 @@ The package re-exports all definitions from:
 
 ### Commonly Used Types
 
-| Type                   | Purpose                                                                                                    |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `User`                 | Canonical user record with `profile?` and `settings?`                                                      |
-| `RegisterCredentials`  | Registration input including `displayName?`, `firstName?`, `lastName?`, `confirmPassword?`, `acceptTerms?` |
-| `AuthResponse`         | Auth result shape with `user?`, `session?`, `requiresMfa?`, `mfaToken?`, `error?`                          |
-| `AuthSession`          | Session payload carrying `accessToken`, optional `refreshToken`, `expiresAt`, and `tokenType`              |
-| `ActiveSession`        | Lightweight active-session view for UI and API responses                                                   |
-| `JWTPayload`           | JWT claim shape used by adapters and middleware                                                            |
-| `AuthError`            | Serialized error payload structure, not the runtime `Error` class from `@reasvyn/auth-core`                |
-| `PasswordCredential`   | Stored credential state for password-based sign-in, including lock and compromise metadata                 |
-| `UserSecurityMethod`   | Normalized record for enabled, pending, disabled, or locked security methods                               |
-| `OneTimeCodeChallenge` | OTP challenge state for email, SMS, sign-in, reset, and verification flows                                 |
-| `UserSecurityOverview` | Aggregated security posture summary for account settings and admin review screens                          |
+| Type                         | Purpose                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `User`                       | Canonical user record with `profile?` and `settings?`                                                      |
+| `RegisterCredentials`        | Registration input including `displayName?`, `firstName?`, `lastName?`, `confirmPassword?`, `acceptTerms?` |
+| `AuthResponse`               | Auth result shape with `user?`, `session?`, `requiresMfa?`, `mfaToken?`, `error?`                          |
+| `AuthSession`                | Session payload carrying `accessToken`, optional `refreshToken`, `expiresAt`, and `tokenType`              |
+| `ActiveSession`              | Lightweight active-session view for UI and API responses                                                   |
+| `JWTPayload`                 | JWT claim shape used by adapters and middleware                                                            |
+| `AuthError`                  | Serialized error payload structure, not the runtime `Error` class from `@reasvyn/auth-core`                |
+| `PasswordCredential`         | Stored credential state for password-based sign-in, including lock and compromise metadata                 |
+| `UserSecurityMethod`         | Normalized record for enabled, pending, disabled, or locked security methods                               |
+| `OneTimeCodeChallenge`       | OTP challenge state for email, SMS, sign-in, reset, and verification flows                                 |
+| `StoredOneTimeCodeChallenge` | Persistence shape for hashed OTP challenges and their single-use lifecycle                                 |
+| `UserSecurityOverview`       | Aggregated security posture summary for account settings and admin review screens                          |
 
 ### User Model Notes
 
@@ -125,6 +126,7 @@ The `security` module now includes a shared baseline for built-in credential aut
 - `SecurityMethodType` / `SecurityMethodStatus` for consistent method lifecycle handling
 - `ConfigureSecurityMethodRequest`, `VerifySecurityMethodRequest`, and `DisableSecurityMethodRequest` for enrollment flows
 - `RequestOneTimeCodeRequest` and `VerifyOneTimeCodeRequest` for challenge-based verification
+- `StoredOneTimeCodeChallenge` for persistence layers that must store hashed OTP state, raw destination, and consumption metadata
 - `RecoveryCode` and `RegenerateRecoveryCodesResponse` for recovery workflows
 
 ## License
